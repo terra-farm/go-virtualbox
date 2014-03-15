@@ -397,12 +397,12 @@ func (m *Machine) DelNATPF(n int, name string) error {
 // Set the NIC number #n.
 func (m *Machine) SetNIC(n int, nic NIC) error {
 	args := []string{"modifyvm", m.Name,
-		fmt.Sprintf("--nic%d", n), nic.Type,
-		fmt.Sprintf("--nictype%d", n), nic.HwType,
+		fmt.Sprintf("--nic%d", n), nic.Network,
+		fmt.Sprintf("--nictype%d", n), nic.Hardware,
 		fmt.Sprintf("--cableconnected%d", n), "on",
 	}
 
-	if nic.Type == "hostonly" {
+	if nic.Network == "hostonly" {
 		args = append(args, fmt.Sprintf("--hostonlyadapter%d", n), nic.HostonlyAdapter)
 	}
 	return vbm(args...)
