@@ -13,7 +13,7 @@ import (
 
 var (
 	VBM     = "VBoxManage" // Path to VBoxManage utility.
-	Verbose = false        // Verbose mode.
+	Verbose = new(bool)    // Verbose mode.
 )
 
 func init() {
@@ -37,7 +37,7 @@ var (
 
 func vbm(args ...string) error {
 	cmd := exec.Command(VBM, args...)
-	if Verbose {
+	if *Verbose {
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		log.Printf("exec %s with arguments %v", VBM, args)
@@ -53,7 +53,7 @@ func vbm(args ...string) error {
 
 func vbmOut(args ...string) ([]byte, error) {
 	cmd := exec.Command(VBM, args...)
-	if Verbose {
+	if *Verbose {
 		cmd.Stderr = os.Stderr
 		log.Printf("exec %s with arguments %v", VBM, args)
 	}
@@ -69,7 +69,7 @@ func vbmOut(args ...string) ([]byte, error) {
 
 func vbmOutErr(args ...string) ([]byte, []byte, error) {
 	cmd := exec.Command(VBM, args...)
-	if Verbose {
+	if *Verbose {
 		log.Printf("exec %s with arguments %v", VBM, args)
 	}
 	var stdout bytes.Buffer
