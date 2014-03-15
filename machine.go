@@ -397,8 +397,8 @@ func (m *Machine) DelNATPF(n int, name string) error {
 // Set the NIC number #n.
 func (m *Machine) SetNIC(n int, nic NIC) error {
 	args := []string{"modifyvm", m.Name,
-		fmt.Sprintf("--nic%d", n), nic.Network,
-		fmt.Sprintf("--nictype%d", n), nic.Hardware,
+		fmt.Sprintf("--nic%d", n), string(nic.Network),
+		fmt.Sprintf("--nictype%d", n), string(nic.Hardware),
 		fmt.Sprintf("--cableconnected%d", n), "on",
 	}
 
