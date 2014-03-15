@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strings"
 )
 
 var (
@@ -41,7 +42,7 @@ func vbm(args ...string) error {
 	if *Verbose {
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
-		log.Printf("exec %s with arguments %v", VBM, args)
+		log.Printf("executing: %v %v", *VBM, strings.Join(args, " "))
 	}
 	if err := cmd.Run(); err != nil {
 		if ee, ok := err.(*exec.Error); ok && ee == exec.ErrNotFound {
@@ -56,7 +57,7 @@ func vbmOut(args ...string) ([]byte, error) {
 	cmd := exec.Command(*VBM, args...)
 	if *Verbose {
 		cmd.Stderr = os.Stderr
-		log.Printf("exec %s with arguments %v", VBM, args)
+		log.Printf("executing: %v %v", *VBM, strings.Join(args, " "))
 	}
 
 	b, err := cmd.Output()
@@ -71,7 +72,7 @@ func vbmOut(args ...string) ([]byte, error) {
 func vbmOutErr(args ...string) ([]byte, []byte, error) {
 	cmd := exec.Command(*VBM, args...)
 	if *Verbose {
-		log.Printf("exec %s with arguments %v", VBM, args)
+		log.Printf("executing: %v %v", *VBM, strings.Join(args, " "))
 	}
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
