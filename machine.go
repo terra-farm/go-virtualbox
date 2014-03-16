@@ -385,8 +385,7 @@ func (m *Machine) Modify() error {
 // Add a named NAT port forarding rule to NIC number #n.
 func (m *Machine) AddNATPF(n int, name string, rule PFRule) error {
 	return vbm("controlvm", m.Name, fmt.Sprintf("natpf%d", n),
-		fmt.Sprintf("%s,%s,%s,%d,%s,%d", name, rule.Proto,
-			rule.HostIP, rule.HostPort, rule.GuestIP, rule.GuestPort))
+		fmt.Sprintf("%s,%s", name, rule.Format()))
 }
 
 // Delete the named NAT port forwarding rule from NIC number #n.
