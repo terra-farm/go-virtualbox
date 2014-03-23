@@ -9,53 +9,14 @@ import (
 	"time"
 )
 
-/*
-VirtualBox Machine State Transition
-
-A VirtualBox machine can be in one of the following states:
-
-- poweroff: The VM is powered off and no previous running state saved.
-- running: The VM is running.
-- paused: The VM is paused, but its state is not saved to disk. If you quit
-	      VirtualBox, the state will be lost.
-- saved: The VM is powered off, and the previous state is saved on disk.
-- aborted: The VM process crashed. This should happen very rarely.
-
-VBoxManage supports the following transitions between states:
-
-- startvm <VM>: poweroff|saved --> running
-- controlvm <VM> pause: running --> paused
-- controlvm <VM> resume: paused --> running
-- controlvm <VM> savestate: running -> saved
-- controlvm <VM> acpipowerbutton: running --> poweroff
-- controlvm <VM> poweroff: running --> poweroff (unsafe)
-- controlvm <VM> reset: running --> poweroff --> running (unsafe)
-
-Poweroff and reset are unsafe because they will lose state and might corrupt
-disk image.
-
-To make things simpler, the following transitions are used instead:
-
-- start: poweroff|saved|paused|aborted --> running
-- stop: [paused|saved -->] running --> poweroff
-- save: [paused -->] running --> saved
-- restart: [paused|saved -->] running --> poweroff --> running
-- poweroff: [paused|saved -->] running --> poweroff (unsafe)
-- reset: [paused|saved -->] running --> poweroff --> running (unsafe)
-
-The takeaway is we try our best to transit the virtual machine into the state
-you want it to be, and you only need to watch out for the potentially unsafe
-poweroff and reset.
-*/
-
 type MachineState string
 
 const (
-	Poweroff MachineState = "poweroff"
-	Running               = "running"
-	Paused                = "paused"
-	Saved                 = "saved"
-	Aborted               = "aborted"
+	Poweroff = MachineState("poweroff")
+	Running  = MachineState("running")
+	Paused   = MachineState("paused")
+	Saved    = MachineState("saved")
+	Aborted  = MachineState("aborted")
 )
 
 type Flag int
@@ -107,7 +68,7 @@ type Machine struct {
 	BootOrder  []string // max 4 slots, each in {none|floppy|dvd|disk|net}
 }
 
-// Refresh the machine information.
+// Refresh reloads the machine information.
 func (m *Machine) Refresh() error {
 	id := m.Name
 	if id == "" {
@@ -121,7 +82,7 @@ func (m *Machine) Refresh() error {
 	return nil
 }
 
-// Start the machine.
+// Start starts the machine.
 func (m *Machine) Start() error {
 	switch m.State {
 	case Paused:
@@ -132,7 +93,7 @@ func (m *Machine) Start() error {
 	return nil
 }
 
-// Suspend the machine and save its state to disk.
+// Suspend suspends the machine and saves its state to disk.
 func (m *Machine) Save() error {
 	switch m.State {
 	case Paused:
@@ -145,7 +106,7 @@ func (m *Machine) Save() error {
 	return vbm("controlvm", m.Name, "savestate")
 }
 
-// Pause the execution of the machine.
+// Pause pauses the execution of the machine.
 func (m *Machine) Pause() error {
 	switch m.State {
 	case Paused, Poweroff, Aborted, Saved:
@@ -154,7 +115,7 @@ func (m *Machine) Pause() error {
 	return vbm("controlvm", m.Name, "pause")
 }
 
-// Gracefully stop the machine.
+// Stop gracefully stops the machine.
 func (m *Machine) Stop() error {
 	switch m.State {
 	case Poweroff, Aborted, Saved:
@@ -177,7 +138,7 @@ func (m *Machine) Stop() error {
 	return nil
 }
 
-// Forcefully stop the machine. State is lost and might corrupt disk.
+// Poweroff forcefully stops the machine. State is lost and might corrupt the disk image.
 func (m *Machine) Poweroff() error {
 	switch m.State {
 	case Poweroff, Aborted, Saved:
@@ -186,7 +147,7 @@ func (m *Machine) Poweroff() error {
 	return vbm("controlvm", m.Name, "poweroff")
 }
 
-// Gracefully restart the machine.
+// Restart gracefully restarts the machine.
 func (m *Machine) Restart() error {
 	switch m.State {
 	case Paused, Saved:
@@ -200,7 +161,7 @@ func (m *Machine) Restart() error {
 	return m.Start()
 }
 
-// Forcefully restart the machine. State is lost and might corrupt disk.
+// Reset forcefully restarts the machine. State is lost and might corrupt the disk image.
 func (m *Machine) Reset() error {
 	switch m.State {
 	case Paused, Saved:
@@ -211,7 +172,7 @@ func (m *Machine) Reset() error {
 	return vbm("controlvm", m.Name, "reset")
 }
 
-// Delete the machine and associated disk images.
+// Delete deletes the machine and associated disk images.
 func (m *Machine) Delete() error {
 	if err := m.Poweroff(); err != nil {
 		return err
@@ -219,16 +180,16 @@ func (m *Machine) Delete() error {
 	return vbm("unregistervm", m.Name, "--delete")
 }
 
-// Get a machine by name or by UUID.
+// GetMachine finds a machine by its name or UUID.
 func GetMachine(id string) (*Machine, error) {
 	stdout, stderr, err := vbmOutErr("showvminfo", id, "--machinereadable")
 	if err != nil {
-		if reMachineNotFound.Find(stderr) != nil {
+		if reMachineNotFound.FindString(stderr) != "" {
 			return nil, ErrMachineNotExist
 		}
 		return nil, err
 	}
-	s := bufio.NewScanner(bytes.NewReader(stdout))
+	s := bufio.NewScanner(bytes.NewReader([]byte(stdout)))
 	m := &Machine{}
 	for s.Scan() {
 		res := reVMInfoLine.FindStringSubmatch(s.Text())
@@ -280,14 +241,14 @@ func GetMachine(id string) (*Machine, error) {
 	return m, nil
 }
 
-// List all machines.
+// ListMachines lists all registered machines.
 func ListMachines() ([]*Machine, error) {
-	b, err := vbmOut("list", "vms")
+	out, err := vbmOut("list", "vms")
 	if err != nil {
 		return nil, err
 	}
-	var ms []*Machine
-	s := bufio.NewScanner(bytes.NewReader(b))
+	ms := []*Machine{}
+	s := bufio.NewScanner(bytes.NewReader([]byte(out)))
 	for s.Scan() {
 		res := reVMNameUUID.FindStringSubmatch(s.Text())
 		if res == nil {
@@ -305,7 +266,7 @@ func ListMachines() ([]*Machine, error) {
 	return ms, nil
 }
 
-// Create a new machine. If basefolder is empty, use default.
+// CreateMachine creates a new machine. If basefolder is empty, use default.
 func CreateMachine(name, basefolder string) (*Machine, error) {
 	if name == "" {
 		return nil, fmt.Errorf("machine name is empty")
@@ -339,7 +300,7 @@ func CreateMachine(name, basefolder string) (*Machine, error) {
 	return m, nil
 }
 
-// Modify the settings of the machine.
+// Modify changes the settings of the machine.
 func (m *Machine) Modify() error {
 	args := []string{"modifyvm", m.Name,
 		"--firmware", "bios",
@@ -372,7 +333,7 @@ func (m *Machine) Modify() error {
 
 	for i, dev := range m.BootOrder {
 		if i > 3 {
-			break
+			break // Only four slots `--boot{1,2,3,4}`. Ignore the rest.
 		}
 		args = append(args, fmt.Sprintf("--boot%d", i+1), dev)
 	}
@@ -382,18 +343,18 @@ func (m *Machine) Modify() error {
 	return m.Refresh()
 }
 
-// Add a named NAT port forarding rule to NIC number #n.
+// AddNATPF adds a NAT port forarding rule to the n-th NIC with the given name.
 func (m *Machine) AddNATPF(n int, name string, rule PFRule) error {
 	return vbm("controlvm", m.Name, fmt.Sprintf("natpf%d", n),
 		fmt.Sprintf("%s,%s", name, rule.Format()))
 }
 
-// Delete the named NAT port forwarding rule from NIC number #n.
+// DelNATPF deletes the NAT port forwarding rule with the given name from the n-th NIC.
 func (m *Machine) DelNATPF(n int, name string) error {
 	return vbm("controlvm", m.Name, fmt.Sprintf("natpf%d", n), "delete", name)
 }
 
-// Set the NIC number #n.
+// SetNIC set the n-th NIC.
 func (m *Machine) SetNIC(n int, nic NIC) error {
 	args := []string{"modifyvm", m.Name,
 		fmt.Sprintf("--nic%d", n), string(nic.Network),
@@ -407,7 +368,7 @@ func (m *Machine) SetNIC(n int, nic NIC) error {
 	return vbm(args...)
 }
 
-// Add a named storage controller.
+// AddStorageCtl adds a storage controller with the given name.
 func (m *Machine) AddStorageCtl(name string, ctl StorageController) error {
 	args := []string{"storagectl", m.Name, "--name", name}
 	if ctl.SysBus != "" {
@@ -424,12 +385,12 @@ func (m *Machine) AddStorageCtl(name string, ctl StorageController) error {
 	return vbm(args...)
 }
 
-// Delete the naed storage controller.
+// DelStorageCtl deletes the storage controller with the given name.
 func (m *Machine) DelStorageCtl(name string) error {
 	return vbm("storagectl", m.Name, "--name", name, "--remove")
 }
 
-// Attach a storage medium to the named storage controller.
+// AttachStorage attaches a storage medium to the named storage controller.
 func (m *Machine) AttachStorage(ctlName string, medium StorageMedium) error {
 	return vbm("storageattach", m.Name, "--storagectl", ctlName,
 		"--port", fmt.Sprintf("%d", medium.Port),

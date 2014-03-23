@@ -7,7 +7,7 @@ import (
 	"strconv"
 )
 
-// NAT network.
+// A NATNet defines a NAT network.
 type NATNet struct {
 	Name    string
 	IPv4    net.IPNet
@@ -16,13 +16,13 @@ type NATNet struct {
 	Enabled bool
 }
 
-// Get all NAT networks. Map is keyed by NATNet.Name.
+// NATNets gets all NAT networks in a  map keyed by NATNet.Name.
 func NATNets() (map[string]NATNet, error) {
-	b, err := vbmOut("list", "natnets")
+	out, err := vbmOut("list", "natnets")
 	if err != nil {
 		return nil, err
 	}
-	s := bufio.NewScanner(bytes.NewReader(b))
+	s := bufio.NewScanner(bytes.NewReader([]byte(out)))
 	m := map[string]NATNet{}
 	n := NATNet{}
 	for s.Scan() {
@@ -30,6 +30,7 @@ func NATNets() (map[string]NATNet, error) {
 		if line == "" {
 			m[n.Name] = n
 			n = NATNet{}
+			continue
 		}
 		res := reColonLine.FindStringSubmatch(line)
 		if res == nil {
@@ -56,13 +57,9 @@ func NATNets() (map[string]NATNet, error) {
 			}
 			n.IPv6.Mask = net.CIDRMask(int(l), net.IPv6len*8)
 		case "DHCP Enabled":
-			if val == "Yes" {
-				n.DHCP = true
-			}
+			n.DHCP = (val == "Yes")
 		case "Enabled":
-			if val == "Yes" {
-				n.Enabled = true
-			}
+			n.Enabled = (val == "Yes")
 		}
 	}
 	if err := s.Err(); err != nil {

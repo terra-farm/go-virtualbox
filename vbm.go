@@ -13,14 +13,14 @@ import (
 )
 
 var (
-	VBM     = new(string) // Path to VBoxManage utility.
-	Verbose = new(bool)   // Verbose mode.
+	VBM     string // Path to VBoxManage utility.
+	Verbose bool   // Verbose mode.
 )
 
 func init() {
-	*VBM = "VBoxManage"
+	VBM = "VBoxManage"
 	if p := os.Getenv("VBOX_INSTALL_PATH"); p != "" && runtime.GOOS == "windows" {
-		*VBM = filepath.Join(p, "VBoxManage.exe")
+		VBM = filepath.Join(p, "VBoxManage.exe")
 	}
 }
 
@@ -38,11 +38,11 @@ var (
 )
 
 func vbm(args ...string) error {
-	cmd := exec.Command(*VBM, args...)
-	if *Verbose {
+	cmd := exec.Command(VBM, args...)
+	if Verbose {
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
-		log.Printf("executing: %v %v", *VBM, strings.Join(args, " "))
+		log.Printf("executing: %v %v", VBM, strings.Join(args, " "))
 	}
 	if err := cmd.Run(); err != nil {
 		if ee, ok := err.(*exec.Error); ok && ee == exec.ErrNotFound {
@@ -53,11 +53,11 @@ func vbm(args ...string) error {
 	return nil
 }
 
-func vbmOut(args ...string) ([]byte, error) {
-	cmd := exec.Command(*VBM, args...)
-	if *Verbose {
+func vbmOut(args ...string) (string, error) {
+	cmd := exec.Command(VBM, args...)
+	if Verbose {
 		cmd.Stderr = os.Stderr
-		log.Printf("executing: %v %v", *VBM, strings.Join(args, " "))
+		log.Printf("executing: %v %v", VBM, strings.Join(args, " "))
 	}
 
 	b, err := cmd.Output()
@@ -66,13 +66,13 @@ func vbmOut(args ...string) ([]byte, error) {
 			err = ErrVBMNotFound
 		}
 	}
-	return b, err
+	return string(b), err
 }
 
-func vbmOutErr(args ...string) ([]byte, []byte, error) {
-	cmd := exec.Command(*VBM, args...)
-	if *Verbose {
-		log.Printf("executing: %v %v", *VBM, strings.Join(args, " "))
+func vbmOutErr(args ...string) (string, string, error) {
+	cmd := exec.Command(VBM, args...)
+	if Verbose {
+		log.Printf("executing: %v %v", VBM, strings.Join(args, " "))
 	}
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
@@ -84,5 +84,5 @@ func vbmOutErr(args ...string) ([]byte, []byte, error) {
 			err = ErrVBMNotFound
 		}
 	}
-	return stdout.Bytes(), stderr.Bytes(), err
+	return stdout.String(), stderr.String(), err
 }
