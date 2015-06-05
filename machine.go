@@ -300,6 +300,41 @@ func CreateMachine(name, basefolder string) (*Machine, error) {
 	return m, nil
 }
 
+
+// RegisterMachine registers a existing .vbox machine.
+func RegisterMachine(name, vboxfile string) (*Machine, error) {
+	if name == "" {
+		return nil, fmt.Errorf("machine name is empty")
+	}
+
+	// Check if a machine with the given name already exists.
+	ms, err := ListMachines()
+	if err != nil {
+		return nil, err
+	}
+	for _, m := range ms {
+		if m.Name == name {
+			return nil, ErrMachineExist
+		}
+	}
+
+	// Register the machine.
+	args := []string{"registervm", vboxfile}
+
+	if err := vbm(args...); err != nil {
+		return nil, err
+	}
+
+	m, err := GetMachine(name)
+	if err != nil {
+		return nil, err
+	}
+
+	return m, nil
+}
+
+
+
 // Modify changes the settings of the machine.
 func (m *Machine) Modify() error {
 	args := []string{"modifyvm", m.Name,
