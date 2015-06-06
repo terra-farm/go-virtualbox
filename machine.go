@@ -434,3 +434,19 @@ func (m *Machine) AttachStorage(ctlName string, medium StorageMedium) error {
 		"--medium", medium.Medium,
 	)
 }
+
+// Execute a command on a machine.
+func (m *Machine) ExecuteCommand(command string, user string, password string) (string, error) {
+	args := []string{"guestcontrol", m.Name, "execute",
+									 "--image", command,
+									 "--username", user,
+									 "--password", password,
+									 "--wait-stdout"}
+	var str string
+	var err error
+
+	if str, err = vbmOut(args...); err != nil {
+		return "", err
+	}
+	return str, nil
+}
