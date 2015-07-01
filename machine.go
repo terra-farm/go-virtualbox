@@ -66,6 +66,7 @@ type Machine struct {
 	OSType     string
 	Flag       Flag
 	BootOrder  []string // max 4 slots, each in {none|floppy|dvd|disk|net}
+	Shares     SharedFolders
 }
 
 // Refresh reloads the machine information.
@@ -233,6 +234,10 @@ func GetMachine(id string) (*Machine, error) {
 		case "CfgFile":
 			m.CfgFile = val
 			m.BaseFolder = filepath.Dir(val)
+		default:
+			if err := m.Shares.parseProperty(key, val); err != nil {
+				return nil, err
+			}
 		}
 	}
 	if err := s.Err(); err != nil {
