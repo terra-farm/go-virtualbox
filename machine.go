@@ -66,6 +66,7 @@ type Machine struct {
 	OSType     string
 	Flag       Flag
 	BootOrder  []string // max 4 slots, each in {none|floppy|dvd|disk|net}
+	NICs       []NIC
 }
 
 // Refresh reloads the machine information.
@@ -337,6 +338,18 @@ func (m *Machine) Modify() error {
 		}
 		args = append(args, fmt.Sprintf("--boot%d", i+1), dev)
 	}
+
+	for i, nic := range m.NICs {
+		n := i + 1
+		args = append(args,
+			fmt.Sprintf("--nic%d", n), string(nic.Network),
+			fmt.Sprintf("--nictype%d", n), string(nic.Hardware),
+			fmt.Sprintf("--cableconnected%d", n), "on")
+		if nic.Network == NICNetHostonly {
+			args = append(args, fmt.Sprintf("--hostonlyadapter%d", n), nic.HostonlyAdapter)
+		}
+	}
+
 	if err := vbm(args...); err != nil {
 		return err
 	}
