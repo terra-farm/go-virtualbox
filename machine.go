@@ -257,7 +257,12 @@ func ListMachines() ([]*Machine, error) {
 		}
 		m, err := GetMachine(res[1])
 		if err != nil {
-			return nil, err
+			// Sometimes a VM is listed but not available, so we need to handle this.
+			if err == ErrMachineNotExist {
+				continue
+			} else {
+				return nil, err
+			}
 		}
 		ms = append(ms, m)
 	}
