@@ -462,7 +462,7 @@ func (m *Machine) GetGuestProperty(key string) (string, error) {
 	/* 'guestproperty get' returns 0 even when the key is not found,
 	so we need to check stdout for this case */
 	if strings.HasPrefix(value, "No value set") {
-		return "", fmt.Errorf("Guest property '%S' not found", key)
+		return "", fmt.Errorf("Guest property '%S' not found in VM '%s'", key, m.Name)
 	} else {
 		return strings.TrimPrefix(value, "Value: "), nil
 	}
