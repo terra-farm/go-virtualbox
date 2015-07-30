@@ -69,6 +69,13 @@ type Machine struct {
 	NICs       []NIC
 }
 
+func New() *Machine {
+	return &Machine{
+		BootOrder: make([]string, 0, 4),
+		NICs:      make([]NIC, 0, 4),
+	}
+}
+
 // Refresh reloads the machine information.
 func (m *Machine) Refresh() error {
 	id := m.Name
@@ -190,8 +197,10 @@ func GetMachine(id string) (*Machine, error) {
 		}
 		return nil, err
 	}
+
+	/* Read all VM info into a map */
+	propMap := make(map[string]string)
 	s := bufio.NewScanner(strings.NewReader(stdout))
-	m := &Machine{}
 	for s.Scan() {
 		res := reVMInfoLine.FindStringSubmatch(s.Text())
 		if res == nil {
@@ -205,37 +214,56 @@ func GetMachine(id string) (*Machine, error) {
 		if val == "" {
 			val = res[4]
 		}
-
-		switch key {
-		case "name":
-			m.Name = val
-		case "UUID":
-			m.UUID = val
-		case "VMState":
-			m.State = MachineState(val)
-		case "memory":
-			n, err := strconv.ParseUint(val, 10, 32)
-			if err != nil {
-				return nil, err
-			}
-			m.Memory = uint(n)
-		case "cpus":
-			n, err := strconv.ParseUint(val, 10, 32)
-			if err != nil {
-				return nil, err
-			}
-			m.CPUs = uint(n)
-		case "vram":
-			n, err := strconv.ParseUint(val, 10, 32)
-			if err != nil {
-				return nil, err
-			}
-			m.VRAM = uint(n)
-		case "CfgFile":
-			m.CfgFile = val
-			m.BaseFolder = filepath.Dir(val)
-		}
+		propMap[key] = val
 	}
+
+	/* Extract basic info */
+	m := New()
+	m.Name = propMap["name"]
+	m.UUID = propMap["UUID"]
+	m.State = MachineState(propMap["VMState"])
+	n, err := strconv.ParseUint(propMap["memory"], 10, 32)
+	if err != nil {
+		return nil, err
+	}
+	m.Memory = uint(n)
+	n, err = strconv.ParseUint(propMap["cpus"], 10, 32)
+	if err != nil {
+		return nil, err
+	}
+	m.CPUs = uint(n)
+	n, err = strconv.ParseUint(propMap["vram"], 10, 32)
+	if err != nil {
+		return nil, err
+	}
+	m.VRAM = uint(n)
+	m.CfgFile = propMap["CfgFile"]
+	m.BaseFolder = filepath.Dir(m.CfgFile)
+
+	/* Extract NIC info */
+	for i := 1; i <= 4; i++ {
+		var nic NIC
+		nicType, ok := propMap[fmt.Sprintf("nic%d", i)]
+		if !ok || nicType == "none" {
+			break
+		}
+		nic.Network = NICNetwork(nicType)
+		nic.Hardware = NICHardware(propMap[fmt.Sprintf("nictype%d", i)])
+		if nic.Hardware == "" {
+			return nil, fmt.Errorf("Could not find corresponding 'nictype%d'", i)
+		}
+		nic.MacAddr = propMap[fmt.Sprintf("macaddress%d", i)]
+		if nic.MacAddr == "" {
+			return nil, fmt.Errorf("Could not find corresponding 'macaddress%d'", i)
+		}
+		if nic.Network == NICNetHostonly {
+			nic.HostInterface = propMap[fmt.Sprintf("hostonlyadapter%d", i)]
+		} else if nic.Network == NICNetBridged {
+			nic.HostInterface = propMap[fmt.Sprintf("bridgeadapter%d", i)]
+		}
+		m.NICs = append(m.NICs, nic)
+	}
+
 	if err := s.Err(); err != nil {
 		return nil, err
 	}
