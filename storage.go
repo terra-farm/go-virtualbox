@@ -49,3 +49,8 @@ const (
 	DriveHDD = DriveType("hdd")
 	DriveFDD = DriveType("fdd")
 )
+
+// Clone virtual harddrive
+func CloneHD(input, output string) error {
+	return vbm("clonehd", input, output)
+}
