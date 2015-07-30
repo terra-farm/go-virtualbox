@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -188,9 +189,18 @@ func (m *Machine) Delete() error {
 	return vbm("unregistervm", m.Name, "--delete")
 }
 
+var mutex sync.Mutex
+
 // GetMachine finds a machine by its name or UUID.
 func GetMachine(id string) (*Machine, error) {
+	/* There is a strage behavior where running multiple instances of
+	'VBoxManage showvminfo' on same VM simultaneously can return an error of
+	'object is not ready (E_ACCESSDENIED)', so we sequential the operation with a mutex.
+	Note if you are running multiple process of go-virtualbox or 'showvminfo'
+	in the command line side by side, this not gonna work. */
+	mutex.Lock()
 	stdout, stderr, err := vbmOutErr("showvminfo", id, "--machinereadable")
+	mutex.Unlock()
 	if err != nil {
 		if reMachineNotFound.FindString(stderr) != "" {
 			return nil, ErrMachineNotExist
