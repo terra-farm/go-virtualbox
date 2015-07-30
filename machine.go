@@ -351,7 +351,9 @@ func (m *Machine) Modify() error {
 			fmt.Sprintf("--nictype%d", n), string(nic.Hardware),
 			fmt.Sprintf("--cableconnected%d", n), "on")
 		if nic.Network == NICNetHostonly {
-			args = append(args, fmt.Sprintf("--hostonlyadapter%d", n), nic.HostonlyAdapter)
+			args = append(args, fmt.Sprintf("--hostonlyadapter%d", n), nic.HostInterface)
+		} else if nic.Network == NICNetBridged {
+			args = append(args, fmt.Sprintf("--bridgeadapter%d", n), nic.HostInterface)
 		}
 	}
 
@@ -380,8 +382,10 @@ func (m *Machine) SetNIC(n int, nic NIC) error {
 		fmt.Sprintf("--cableconnected%d", n), "on",
 	}
 
-	if nic.Network == "hostonly" {
-		args = append(args, fmt.Sprintf("--hostonlyadapter%d", n), nic.HostonlyAdapter)
+	if nic.Network == NICNetHostonly {
+		args = append(args, fmt.Sprintf("--hostonlyadapter%d", n), nic.HostInterface)
+	} else if nic.Network == NICNetBridged {
+		args = append(args, fmt.Sprintf("--bridgeadapter%d", n), nic.HostInterface)
 	}
 	return vbm(args...)
 }
