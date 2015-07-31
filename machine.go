@@ -478,3 +478,30 @@ func (m *Machine) GetGuestProperty(key string) (*string, error) {
 		return &trimmed, nil
 	}
 }
+
+// SetExtraData attaches custom string to the VM.
+func (m *Machine) SetExtraData(key, val string) error {
+	return vbm("setextradata", m.Name, key, val)
+}
+
+// SetExtraData retrieves custom string from the VM.
+func (m *Machine) GetExtraData(key string) (*string, error) {
+	value, err := vbmOut("getextradata", m.Name, key)
+	if err != nil {
+		return nil, err
+	}
+	value = strings.TrimSpace(value)
+	/* 'getextradata get' returns 0 even when the key is not found,
+	so we need to check stdout for this case */
+	if strings.HasPrefix(value, "No value set") {
+		return nil, nil
+	} else {
+		trimmed := strings.TrimPrefix(value, "Value: ")
+		return &trimmed, nil
+	}
+}
+
+// SetExtraData removes custom string from the VM.
+func (m *Machine) DeleteExtraData(key string) error {
+	return vbm("setextradata", m.Name, key)
+}
