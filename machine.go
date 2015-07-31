@@ -463,17 +463,18 @@ func (m *Machine) AttachStorage(ctlName string, medium StorageMedium) error {
 // GetGuestProperty get guest property from the VM, mose of these properties
 //	need VirtualBox Guest Addition be installed on the guest.
 // Use 'VBoxManage guestproperty enumerate' to list all available properties.
-func (m *Machine) GetGuestProperty(key string) (string, error) {
+func (m *Machine) GetGuestProperty(key string) (*string, error) {
 	value, err := vbmOut("guestproperty", "get", m.Name, key)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	value = strings.TrimSpace(value)
 	/* 'guestproperty get' returns 0 even when the key is not found,
 	so we need to check stdout for this case */
 	if strings.HasPrefix(value, "No value set") {
-		return "", fmt.Errorf("Guest property '%S' not found in VM '%s'", key, m.Name)
+		return nil, nil
 	} else {
-		return strings.TrimPrefix(value, "Value: "), nil
+		trimmed := strings.TrimPrefix(value, "Value: ")
+		return &trimmed, nil
 	}
 }
