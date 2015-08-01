@@ -53,19 +53,27 @@ func (f Flag) Get(o Flag) string {
 	return bool2string(f&o == o)
 }
 
+type Forwarding struct {
+	Name      string
+	Proto     PFProto
+	HostPort  uint16
+	GuestPort uint16
+}
+
 // Machine information.
 type Machine struct {
-	Name       string
-	UUID       string
-	State      MachineState
-	CPUs       uint
-	Memory     uint // main memory (in MB)
-	VRAM       uint // video memory (in MB)
-	CfgFile    string
-	BaseFolder string
-	OSType     string
-	Flag       Flag
-	BootOrder  []string // max 4 slots, each in {none|floppy|dvd|disk|net}
+	Name        string
+	UUID        string
+	State       MachineState
+	CPUs        uint
+	Memory      uint // main memory (in MB)
+	VRAM        uint // video memory (in MB)
+	CfgFile     string
+	BaseFolder  string
+	OSType      string
+	Flag        Flag
+	BootOrder   []string // max 4 slots, each in {none|floppy|dvd|disk|net}
+	Forwardings []Forwarding
 }
 
 // Refresh reloads the machine information.
@@ -233,6 +241,26 @@ func GetMachine(id string) (*Machine, error) {
 		case "CfgFile":
 			m.CfgFile = val
 			m.BaseFolder = filepath.Dir(val)
+		default:
+			if strings.HasPrefix(key, "Forwarding(") {
+				vals := strings.Split(val, ",")
+
+				forwarding := &Forwarding{Name: vals[0]}
+
+				if vals[1] == "tcp" {
+					forwarding.Proto = PFTCP
+				} else {
+					forwarding.Proto = PFUDP
+				}
+
+				hostPort, _ := strconv.ParseUint(vals[3], 10, 32)
+				forwarding.HostPort = uint16(hostPort)
+
+				guestPort, _ := strconv.ParseUint(vals[5], 10, 32)
+				forwarding.GuestPort = uint16(guestPort)
+
+				m.Forwardings = append(m.Forwardings, *forwarding)
+			}
 		}
 	}
 	if err := s.Err(); err != nil {
