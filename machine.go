@@ -254,6 +254,9 @@ func ListMachines() ([]*Machine, error) {
 		if res == nil {
 			continue
 		}
+		if res[1] == "<inaccessible>" {
+			continue
+		}
 		m, err := GetMachine(res[1])
 		if err != nil {
 			return nil, err
