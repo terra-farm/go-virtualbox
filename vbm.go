@@ -22,6 +22,7 @@ func init() {
 	if p := os.Getenv("VBOX_INSTALL_PATH"); p != "" && runtime.GOOS == "windows" {
 		VBM = filepath.Join(p, "VBoxManage.exe")
 	}
+	Verbose = false
 }
 
 var (
@@ -29,6 +30,8 @@ var (
 	reVMInfoLine      = regexp.MustCompile(`(?:"(.+)"|(.+))=(?:"(.*)"|(.*))`)
 	reColonLine       = regexp.MustCompile(`(.+):\s+(.*)`)
 	reMachineNotFound = regexp.MustCompile(`Could not find a registered machine named '(.+)'`)
+
+	reVMProperty = regexp.MustCompile(`Value:\s+(.+)`)
 )
 
 var (

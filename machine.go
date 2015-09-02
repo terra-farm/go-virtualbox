@@ -257,7 +257,11 @@ func ListMachines() ([]*Machine, error) {
 		if res[1] == "<inaccessible>" {
 			continue
 		}
-		m, err := GetMachine(res[1])
+		if len(res) != 3 {
+			continue
+		}
+
+		m, err := GetMachine(res[2]) // res[1] is name, res[2] is uuid, now use uuid
 		if err != nil {
 			return nil, err
 		}

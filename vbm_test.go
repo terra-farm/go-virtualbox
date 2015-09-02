@@ -6,6 +6,7 @@ import (
 
 func init() {
 	Verbose = true
+	VBM = "VBoxManage"
 }
 
 func TestVBMOut(t *testing.T) {
