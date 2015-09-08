@@ -2,9 +2,12 @@ package virtualbox
 
 // NIC represents a virtualized network interface card.
 type NIC struct {
-	Network         NICNetwork
-	Hardware        NICHardware
-	HostonlyAdapter string
+	Network  NICNetwork
+	Hardware NICHardware
+	//HostonlyAdapter string
+	InterfaceName  string
+	MACAddress     string
+	CableConnected bool
 }
 
 // NICNetwork represents the type of NIC networks.

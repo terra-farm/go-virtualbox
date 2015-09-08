@@ -31,7 +31,8 @@ var (
 	reColonLine       = regexp.MustCompile(`(.+):\s+(.*)`)
 	reMachineNotFound = regexp.MustCompile(`Could not find a registered machine named '(.+)'`)
 
-	reVMProperty = regexp.MustCompile(`Value:\s+(.+)`)
+	reVMProperty          = regexp.MustCompile(`Value:\s+(.+)`)
+	reVMPropertyEnumerate = regexp.MustCompile(`Name:\s+(.+), value:\s+(.+), timestamp:\s+(.+)`)
 )
 
 var (

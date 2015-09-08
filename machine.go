@@ -48,6 +48,13 @@ func bool2string(b bool) string {
 	return "off"
 }
 
+func string2bool(s string) bool {
+	if s == "on" {
+		return true
+	}
+	return false
+}
+
 // Test if flag is set. Return "on" or "off".
 func (f Flag) Get(o Flag) string {
 	return bool2string(f&o == o)
@@ -66,6 +73,7 @@ type Machine struct {
 	OSType     string
 	Flag       Flag
 	BootOrder  []string // max 4 slots, each in {none|floppy|dvd|disk|net}
+	NICs       map[int]*NIC
 }
 
 // Refresh reloads the machine information.
@@ -191,6 +199,8 @@ func GetMachine(id string) (*Machine, error) {
 	}
 	s := bufio.NewScanner(strings.NewReader(stdout))
 	m := &Machine{}
+	m.NICs = make(map[int]*NIC)
+
 	for s.Scan() {
 		res := reVMInfoLine.FindStringSubmatch(s.Text())
 		if res == nil {
@@ -204,6 +214,10 @@ func GetMachine(id string) (*Machine, error) {
 		if val == "" {
 			val = res[4]
 		}
+
+		/*for k, v := range res {
+			fmt.Printf("%d %s\n", k, v)
+		}*/
 
 		switch key {
 		case "name":
@@ -233,11 +247,84 @@ func GetMachine(id string) (*Machine, error) {
 		case "CfgFile":
 			m.CfgFile = val
 			m.BaseFolder = filepath.Dir(val)
+
+		case "nic1":
+			if n, ok := m.NICs[1]; ok {
+				n.Network = NICNetwork(val)
+			} else {
+				m.NICs[1] = &NIC{}
+				m.NICs[1].Network = NICNetwork(val)
+			}
+		case "nictype1":
+			if n, ok := m.NICs[1]; ok {
+				n.Hardware = NICHardware(val)
+			} else {
+				m.NICs[1] = &NIC{}
+				m.NICs[1].Hardware = NICHardware(val)
+			}
+		case "hostonlyadapter1", "nat-network1", "bridgeadapter1", "intnet1":
+			if n, ok := m.NICs[1]; ok {
+				n.InterfaceName = val
+			} else {
+				m.NICs[1] = &NIC{}
+				m.NICs[1].InterfaceName = val
+			}
+		case "cableconnected1":
+			if n, ok := m.NICs[1]; ok {
+				n.CableConnected = string2bool(val)
+			} else {
+				m.NICs[1] = &NIC{}
+				m.NICs[1].CableConnected = string2bool(val)
+			}
+		case "macaddress1":
+			if n, ok := m.NICs[1]; ok {
+				n.MACAddress = val
+			} else {
+				m.NICs[1] = &NIC{}
+				m.NICs[1].MACAddress = val
+			}
+
+		case "nic2":
+			if n, ok := m.NICs[2]; ok {
+				n.Network = NICNetwork(val)
+			} else {
+				m.NICs[2] = &NIC{}
+				m.NICs[2].Network = NICNetwork(val)
+			}
+		case "nictype2":
+			if n, ok := m.NICs[2]; ok {
+				n.Hardware = NICHardware(val)
+			} else {
+				m.NICs[2] = &NIC{}
+				m.NICs[2].Hardware = NICHardware(val)
+			}
+		case "hostonlyadapter2", "nat-network2", "bridgeadapter2", "intnet2":
+			if n, ok := m.NICs[2]; ok {
+				n.InterfaceName = val
+			} else {
+				m.NICs[2] = &NIC{}
+				m.NICs[2].InterfaceName = val
+			}
+		case "cableconnected2":
+			if n, ok := m.NICs[2]; ok {
+				n.CableConnected = string2bool(val)
+			} else {
+				m.NICs[2] = &NIC{}
+				m.NICs[2].CableConnected = string2bool(val)
+			}
+		case "macaddress2":
+			if n, ok := m.NICs[2]; ok {
+				n.MACAddress = val
+			} else {
+				m.NICs[2] = &NIC{}
+				m.NICs[2].MACAddress = val
+			}
 		}
 	}
 	if err := s.Err(); err != nil {
 		return nil, err
 	}
+
 	return m, nil
 }
 
@@ -370,7 +457,7 @@ func (m *Machine) SetNIC(n int, nic NIC) error {
 	}
 
 	if nic.Network == "hostonly" {
-		args = append(args, fmt.Sprintf("--hostonlyadapter%d", n), nic.HostonlyAdapter)
+		args = append(args, fmt.Sprintf("--hostonlyadapter%d", n), nic.InterfaceName)
 	}
 	return vbm(args...)
 }
@@ -405,4 +492,34 @@ func (m *Machine) AttachStorage(ctlName string, medium StorageMedium) error {
 		"--type", string(medium.DriveType),
 		"--medium", medium.Medium,
 	)
+}
+
+// Property Set
+func (m *Machine) PropertySet(key, val string) error {
+	return guestPropertySet(m.UUID, key, val)
+}
+
+// Property Get
+func (m *Machine) PropertyGet(key string) (string, error) {
+	return guestPropertyGet(m.UUID, key)
+}
+
+// Property Get
+func (m *Machine) PropertyDel(key string) error {
+	return guestPropertyDel(m.UUID, key)
+}
+
+// Property Wait
+func (m *Machine) PropertyWait(key string, timeout int) (string, error) {
+	return guestPropertyWait(m.UUID, key, timeout)
+}
+
+// Property Enumerate
+func (m *Machine) PropertyEnumerate() (map[string]string, error) {
+	return guestPropertyEnumerate(m.UUID)
+}
+
+// MAC Address Set
+func (m *Machine) MACAddressSet(solt int, mac string) error {
+	return modifyMacAddress(m.UUID, solt, mac)
 }
