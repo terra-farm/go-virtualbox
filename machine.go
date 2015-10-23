@@ -2,6 +2,7 @@ package virtualbox
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"strconv"
@@ -450,6 +451,10 @@ func (m *Machine) DelNATPF(n int, name string) error {
 
 // SetNIC set the n-th NIC.
 func (m *Machine) SetNIC(n int, nic NIC) error {
+	if m.State == Running || m.State == Saved || m.State == Paused {
+		return errors.New("Session has been locked")
+	}
+
 	args := []string{"modifyvm", m.Name,
 		fmt.Sprintf("--nic%d", n), string(nic.Network),
 		fmt.Sprintf("--nictype%d", n), string(nic.Hardware),
@@ -460,6 +465,29 @@ func (m *Machine) SetNIC(n int, nic NIC) error {
 		args = append(args, fmt.Sprintf("--hostonlyadapter%d", n), nic.InterfaceName)
 	}
 	return vbm(args...)
+}
+
+// SetNIC set the n-th NIC.
+func (m *Machine) SetVRdpPort(port int) error {
+	if m.State == Running || m.State == Saved || m.State == Paused {
+		return errors.New("Session has been locked")
+	}
+
+	if port > 0 {
+		cmd := []string{"modifyvm", m.Name,
+			"--vrde", "on"}
+		err := vbm(cmd...)
+		if err != nil {
+			return err
+		}
+
+		cmd = []string{"modifyvm", m.Name,
+			"--vrdeport", strconv.Itoa(port),
+		}
+		return vbm(cmd...)
+	}
+
+	return nil
 }
 
 // AddStorageCtl adds a storage controller with the given name.
