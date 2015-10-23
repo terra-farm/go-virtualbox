@@ -19,7 +19,7 @@ var (
 
 func init() {
 	VBM = "VBoxManage"
-	if p := os.Getenv("VBOX_INSTALL_PATH"); p != "" && runtime.GOOS == "windows" {
+	if p := os.Getenv("VBOX_MSI_INSTALL_PATH" /*"VBOX_INSTALL_PATH"*/); p != "" && runtime.GOOS == "windows" {
 		VBM = filepath.Join(p, "VBoxManage.exe")
 	}
 	Verbose = false
