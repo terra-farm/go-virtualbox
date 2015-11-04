@@ -568,7 +568,7 @@ func (m *Machine) Clone(number int) error {
 	}
 
 	for i := 0; i < number; i++ {
-		err = vbm("clone", m.Name,
+		err = vbm("clonevm", m.UUID,
 			"--mode", "all",
 			"--register",
 		)
@@ -576,5 +576,5 @@ func (m *Machine) Clone(number int) error {
 			return err
 		}
 	}
-	return err
+	return nil
 }
