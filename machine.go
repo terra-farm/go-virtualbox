@@ -458,6 +458,10 @@ func (m *Machine) DelNATPF(n int, name string) error {
 	return vbm("controlvm", m.Name, fmt.Sprintf("natpf%d", n), "delete", name)
 }
 
+func (m *Machine) SetFrontend(front string) error {
+	return vbm("modifyvm", m.UUID, "--defaultfrontend", front)
+}
+
 // SetNIC set the n-th NIC.
 func (m *Machine) SetNIC(n int, nic NIC) error {
 	if m.State == Running || m.State == Saved || m.State == Paused {
@@ -561,20 +565,18 @@ func (m *Machine) MACAddressSet(solt int, mac string) error {
 	return modifyMacAddress(m.UUID, solt, mac)
 }
 
-func (m *Machine) Clone(number int) error {
-	var err error
+func (m *Machine) Clone(name string) error {
 	if m.State != Poweroff {
 		return errors.New("Machine is not poweroff")
 	}
 
-	for i := 0; i < number; i++ {
-		err = vbm("clonevm", m.UUID,
-			"--mode", "all",
-			"--register",
-		)
-		if err != nil {
-			return err
-		}
+	_, errstr, err := vbmOutErr("clonevm", m.UUID,
+		"--name", name,
+		"--mode", "all",
+		"--register",
+	)
+	if err != nil {
+		return errors.New(errstr)
 	}
 	return nil
 }
