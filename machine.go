@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -330,6 +331,13 @@ func GetMachine(id string) (*Machine, error) {
 	return m, nil
 }
 
+func ImportMachine(filename string) error {
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		return errors.New("no such file or directory")
+	}
+	return vbm("import", filename)
+}
+
 // ListMachines lists all registered machines.
 func ListMachines() ([]*Machine, error) {
 	out, err := vbmOut("list", "vms")
@@ -551,4 +559,22 @@ func (m *Machine) PropertyEnumerate() (map[string]string, error) {
 // MAC Address Set
 func (m *Machine) MACAddressSet(solt int, mac string) error {
 	return modifyMacAddress(m.UUID, solt, mac)
+}
+
+func (m *Machine) Clone(number int) error {
+	var err error
+	if m.State != Poweroff {
+		return errors.New("Machine is not poweroff")
+	}
+
+	for i := 0; i < number; i++ {
+		err = vbm("clone", m.Name,
+			"--mode", "all",
+			"--register",
+		)
+		if err != nil {
+			return err
+		}
+	}
+	return err
 }
