@@ -5,18 +5,19 @@ import (
 	"testing"
 )
 
+/*
 func init() {
 	Verbose = true
 	VBM = "VBoxManage"
-}
+}*/
 
 func TestExtra(t *testing.T) {
-	e := SetExtra("ihaoyue-1.1", "vbox_graph_mode", "360x640-16")
+	e := SetExtra("ihaoyue", "vbox_graph_mode", "360x640-16")
 	if e != nil {
 		t.Fatal(e)
 	}
 
-	b, err := GetExtra("ihaoyue-1.1", "vbox_graph_mode")
+	b, err := GetExtra("ihaoyue", "vbox_graph_mode")
 	if err != nil {
 		t.Fatal(err)
 	}

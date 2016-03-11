@@ -1,5 +1,11 @@
 package virtualbox
 
+import (
+	"errors"
+	"fmt"
+	gouuid "github.com/satori/go.uuid"
+)
+
 // StorageController represents a virtualized storage controller.
 type StorageController struct {
 	SysBus      SystemBus
@@ -39,6 +45,69 @@ type StorageMedium struct {
 	Device    uint
 	DriveType DriveType
 	Medium    string // none|emptydrive|<uuid>|<filename|host:<drive>|iscsi
+	Hdd       *MediumInfo
+	Ctl       string
+}
+
+func (m *StorageMedium) Attach(hdd string) error {
+	if m.Hdd != nil {
+		_, eo, e := vbmOutErr("storageattach", m.Hdd.VMId, "--storagectl", m.Ctl,
+			"--port", fmt.Sprintf("%d", m.Port),
+			"--device", fmt.Sprintf("%d", m.Device),
+			"--type", string(m.DriveType),
+			"--medium", hdd,
+		)
+		if e != nil {
+			return errors.New(e.Error() + ":" + eo)
+		}
+	}
+	return nil
+}
+
+func (m *StorageMedium) AttachByVM(vm, hdd string) error {
+	huuid := gouuid.NewV4().String()
+	_, eo, e := vbmOutErr("internalcommands", "sethduuid", hdd, huuid)
+	if e != nil {
+		return errors.New(e.Error() + ":" + eo)
+	}
+	_, eo, e = vbmOutErr("storageattach", vm, "--storagectl", m.Ctl,
+		"--port", fmt.Sprintf("%d", m.Port),
+		"--device", fmt.Sprintf("%d", m.Device),
+		"--type", string(m.DriveType),
+		"--medium", hdd,
+	)
+	if e != nil {
+		return errors.New(e.Error() + ":" + eo)
+	}
+	return nil
+}
+
+func (m *StorageMedium) Remove() error {
+	if m.Hdd != nil {
+		_, eo, e := vbmOutErr("storageattach", m.Hdd.VMId, "--storagectl", m.Ctl,
+			"--port", fmt.Sprintf("%d", m.Port),
+			"--device", fmt.Sprintf("%d", m.Device),
+			"--type", string(m.DriveType),
+			"--medium", "none",
+		)
+		if e != nil {
+			return errors.New(e.Error() + ":" + eo)
+		}
+	}
+	return nil
+}
+
+func (m *StorageMedium) Delete() error {
+	e := m.Remove()
+	if e != nil {
+		fmt.Println(e.Error())
+	}
+	if m.Hdd != nil {
+		return m.Hdd.Delete()
+	} else {
+		return errors.New("Hdd is nil")
+	}
+	return nil
 }
 
 // DriveType represents the hardware type of a drive.

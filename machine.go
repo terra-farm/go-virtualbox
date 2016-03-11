@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -14,11 +15,12 @@ import (
 type MachineState string
 
 const (
-	Poweroff = MachineState("poweroff")
-	Running  = MachineState("running")
-	Paused   = MachineState("paused")
-	Saved    = MachineState("saved")
-	Aborted  = MachineState("aborted")
+	Poweroff     = MachineState("poweroff")
+	Running      = MachineState("running")
+	Paused       = MachineState("paused")
+	Saved        = MachineState("saved")
+	Aborted      = MachineState("aborted")
+	Inaccessible = MachineState("inaccessible")
 )
 
 type Flag int
@@ -76,6 +78,7 @@ type Machine struct {
 	Flag       Flag
 	BootOrder  []string // max 4 slots, each in {none|floppy|dvd|disk|net}
 	NICs       map[int]*NIC
+	Mediums    map[int]*StorageMedium
 }
 
 // Refresh reloads the machine information.
@@ -203,6 +206,7 @@ func GetMachine(id string) (*Machine, error) {
 	s := bufio.NewScanner(strings.NewReader(stdout))
 	m := &Machine{}
 	m.NICs = make(map[int]*NIC)
+	m.Mediums = make(map[int]*StorageMedium)
 
 	for s.Scan() {
 		res := reVMInfoLine.FindStringSubmatch(s.Text())
@@ -322,6 +326,82 @@ func GetMachine(id string) (*Machine, error) {
 				m.NICs[2] = &NIC{}
 				m.NICs[2].MACAddress = val
 			}
+		case "IDE-0-0":
+			fallthrough
+		case "IDEController-0-0":
+			m.Mediums[0] = &StorageMedium{}
+			if runtime.GOOS == "windows" {
+				m.Mediums[0].Ctl = "IDE"
+			} else {
+				m.Mediums[0].Ctl = "IDEController"
+			}
+			m.Mediums[0].Port = 0
+			m.Mediums[0].Device = 0
+			m.Mediums[0].DriveType = DriveHDD
+		case "IDE-ImageUUID-0-0":
+			fallthrough
+		case "IDEController-ImageUUID-0-0":
+			m.Mediums[0].Hdd, err = GetMediumInfo(val)
+			if err != nil {
+				fmt.Println("GetMediumInfo: ", err.Error())
+			}
+		case "IDE-0-1":
+			fallthrough
+		case "IDEController-0-1":
+			m.Mediums[1] = &StorageMedium{}
+			if runtime.GOOS == "windows" {
+				m.Mediums[1].Ctl = "IDE"
+			} else {
+				m.Mediums[1].Ctl = "IDEController"
+			}
+			m.Mediums[1].Port = 0
+			m.Mediums[1].Device = 1
+			m.Mediums[1].DriveType = DriveHDD
+		case "IDE-ImageUUID-0-1":
+			fallthrough
+		case "IDEController-ImageUUID-0-1":
+			m.Mediums[1].Hdd, err = GetMediumInfo(val)
+			if err != nil {
+				fmt.Println("GetMediumInfo: ", err.Error())
+			}
+		case "IDE-1-0":
+			fallthrough
+		case "IDEController-1-0":
+			m.Mediums[2] = &StorageMedium{}
+			if runtime.GOOS == "windows" {
+				m.Mediums[2].Ctl = "IDE"
+			} else {
+				m.Mediums[2].Ctl = "IDEController"
+			}
+			m.Mediums[2].Port = 1
+			m.Mediums[2].Device = 0
+			m.Mediums[2].DriveType = DriveHDD
+		case "IDE-ImageUUID-1-0":
+			fallthrough
+		case "IDEController-ImageUUID-1-0":
+			m.Mediums[2].Hdd, err = GetMediumInfo(val)
+			if err != nil {
+				fmt.Println("GetMediumInfo: ", err.Error())
+			}
+		case "IDE-1-1":
+			fallthrough
+		case "IDEController-1-1":
+			m.Mediums[3] = &StorageMedium{}
+			if runtime.GOOS == "windows" {
+				m.Mediums[3].Ctl = "IDE"
+			} else {
+				m.Mediums[3].Ctl = "IDEController"
+			}
+			m.Mediums[3].Port = 1
+			m.Mediums[3].Device = 1
+			m.Mediums[3].DriveType = DriveHDD
+		case "IDE-ImageUUID-1-1":
+			fallthrough
+		case "IDEController-ImageUUID-1-1":
+			m.Mediums[3].Hdd, err = GetMediumInfo(val)
+			if err != nil {
+				fmt.Println("GetMediumInfo: ", err.Error())
+			}
 		}
 	}
 	if err := s.Err(); err != nil {
@@ -352,6 +432,11 @@ func ListMachines() ([]*Machine, error) {
 			continue
 		}
 		if res[1] == "<inaccessible>" {
+			em := &Machine{}
+			em.UUID = res[2]
+			em.Name = res[1]
+			em.State = Inaccessible
+			ms = append(ms, em)
 			continue
 		}
 		if len(res) != 3 {

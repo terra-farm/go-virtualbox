@@ -27,6 +27,7 @@ func TestMachine(t *testing.T) {
 			log.Println("NICHardware: ", m.NICs[1].Hardware)
 			log.Println("InterfaceName: ", m.NICs[1].InterfaceName)
 			log.Println("InterfaceName: ", m.NICs[2].InterfaceName)
+			log.Println("Medium: ", m.Mediums[0], m.Mediums[0].Hdd)
 		}
 
 	}
