@@ -18,9 +18,20 @@ var (
 )
 
 func init() {
-	VBM = "VBoxManage"
-	if p := os.Getenv("VBOX_INSTALL_PATH"); p != "" && runtime.GOOS == "windows" {
-		VBM = filepath.Join(p, "VBoxManage.exe")
+	if runtime.GOOS == "windows" {
+		p := os.Getenv("VBOX_MSI_INSTALL_PATH")
+
+		if len(p) < 1 {
+			p = os.Getenv("VBOX_INSTALL_PATH")
+		}
+
+		if len(p) > 0 {
+			VBM = filepath.Join(p, "VBoxManage.exe")
+		} else {
+			panic("Can't find 'VBoxManage.exe'. Make sure that 'VBOX_MSI_INSTALL_PATH' or 'VBOX_INSTALL_PATH' environment variable is set.")
+		}
+	} else {
+		VBM = "VBoxManage"
 	}
 }
 
