@@ -370,7 +370,7 @@ func (m *Machine) SetNIC(n int, nic NIC) error {
 
 // SetHostonlyAdapter set the n-th HostOnlyAdapter.
 func (m *Machine) SetHostonlyAdapter(n int, network HostonlyNet) error {
-	return vbm("modifyvm", "--hostonlyadapter", string(n), network.Name)
+	return vbm("modifyvm", m.Name, "--hostonlyadapter", string(n), network.Name)
 }
 
 // AddStorageCtl adds a storage controller with the given name.
