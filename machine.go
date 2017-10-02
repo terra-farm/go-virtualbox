@@ -368,11 +368,6 @@ func (m *Machine) SetNIC(n int, nic NIC) error {
 	return vbm(args...)
 }
 
-// SetHostonlyAdapter set the n-th HostOnlyAdapter.
-func (m *Machine) SetHostonlyAdapter(n int, network HostonlyNet) error {
-	return vbm("modifyvm", m.Name, "--hostonlyadapter", string(n), network.Name)
-}
-
 // AddStorageCtl adds a storage controller with the given name.
 func (m *Machine) AddStorageCtl(name string, ctl StorageController) error {
 	args := []string{"storagectl", m.Name, "--name", name}
