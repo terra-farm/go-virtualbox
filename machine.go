@@ -93,6 +93,11 @@ func (m *Machine) Start() error {
 	return nil
 }
 
+//DisconnectSerialPort sets given serial port to disconnected
+func (m *Machine) DisconnectSerialPort(portNumber int) error {
+	return vbm("modifyvm", m.Name, fmt.Sprintf("--uartmode%d", portNumber), "disconnected")
+}
+
 // Suspend suspends the machine and saves its state to disk.
 func (m *Machine) Save() error {
 	switch m.State {
