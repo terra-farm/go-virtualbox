@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"os/exec"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 )
@@ -46,24 +48,47 @@ func CreateHostonlyNet() (*HostonlyNet, error) {
 
 // Config changes the configuration of the host-only network.
 func (n *HostonlyNet) Config() error {
-	if n.IPv4.IP != nil && n.IPv4.Mask != nil {
-		if err := vbm("hostonlyif", "ipconfig", n.Name, "--ip", n.IPv4.IP.String(), "--netmask", net.IP(n.IPv4.Mask).String()); err != nil {
-			return err
-		}
-	}
 
-	if n.IPv6.IP != nil && n.IPv6.Mask != nil {
-		prefixLen, _ := n.IPv6.Mask.Size()
-		if err := vbm("hostonlyif", "ipconfig", n.Name, "--ipv6", n.IPv6.IP.String(), "--netmasklengthv6", fmt.Sprintf("%d", prefixLen)); err != nil {
-			return err
+	//We need a windowsfix because of https://www.virtualbox.org/ticket/8796
+	if runtime.GOOS == "windows" {
+		if n.IPv4.IP != nil && n.IPv4.Mask != nil {
+			cmd := exec.Command("netsh", "interface", "ip", "set", "address", fmt.Sprintf("name=\"%s\"", n.Name), "static", n.IPv4.IP.String(), net.IP(n.IPv4.Mask).String())
+			if err := cmd.Run(); err != nil {
+				return err
+			}
 		}
-	}
+		if n.IPv6.IP != nil && n.IPv6.Mask != nil {
+			prefixLen, _ := n.IPv6.Mask.Size()
+			cmd := exec.Command("netsh", "interface", "ipv6", "add", "address", n.Name, fmt.Sprintf("%s/%d", n.IPv6.IP.String(), prefixLen))
+			if err := cmd.Run(); err != nil {
+				return err
+			}
+		}
+		if n.DHCP {
+			vbm("hostonlyif", "ipconfig", n.Name, "--dhcp") // not implemented as of VirtualBox 4.3
+		}
 
-	if n.DHCP {
-		vbm("hostonlyif", "ipconfig", n.Name, "--dhcp") // not implemented as of VirtualBox 4.3
+	} else {
+		if n.IPv4.IP != nil && n.IPv4.Mask != nil {
+			if err := vbm("hostonlyif", "ipconfig", n.Name, "--ip", n.IPv4.IP.String(), "--netmask", net.IP(n.IPv4.Mask).String()); err != nil {
+				return err
+			}
+		}
+
+		if n.IPv6.IP != nil && n.IPv6.Mask != nil {
+			prefixLen, _ := n.IPv6.Mask.Size()
+			if err := vbm("hostonlyif", "ipconfig", n.Name, "--ipv6", n.IPv6.IP.String(), "--netmasklengthv6", fmt.Sprintf("%d", prefixLen)); err != nil {
+				return err
+			}
+		}
+
+		if n.DHCP {
+			vbm("hostonlyif", "ipconfig", n.Name, "--dhcp") // not implemented as of VirtualBox 4.3
+		}
 	}
 
 	return nil
+
 }
 
 // HostonlyNets gets all host-only networks in a  map keyed by HostonlyNet.NetworkName.
