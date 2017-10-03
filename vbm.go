@@ -19,8 +19,14 @@ var (
 
 func init() {
 	VBM = "VBoxManage"
-	if p := os.Getenv("VBOX_INSTALL_PATH"); p != "" && runtime.GOOS == "windows" {
+	p := os.Getenv("VBOX_INSTALL_PATH")
+
+	if p != "" && runtime.GOOS == "windows" {
 		VBM = filepath.Join(p, "VBoxManage.exe")
+	}
+	//Trying fallback if nothing works
+	if p == "" && runtime.GOOS == "windows" && VBM == "VBoxManage" {
+		VBM = filepath.Join("C:\\", "Program Files", "Oracle", "VirtualBox", "VBoxManage.exe")
 	}
 }
 
