@@ -65,7 +65,7 @@ func (n *HostonlyNet) Config() error {
 			}
 		}
 		if n.DHCP {
-			vbm("hostonlyif", "ipconfig", n.Name, "--dhcp") // not implemented as of VirtualBox 4.3
+			vbm("hostonlyif", "ipconfig", fmt.Sprintf("\"%s\"", n.Name), "--dhcp") // not implemented as of VirtualBox 4.3
 		}
 
 	} else {
