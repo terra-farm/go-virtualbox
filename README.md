@@ -17,6 +17,8 @@ $ vagrant box add bento/ubuntu-16.04
 $ vagrant up
 ```
 
+Once you are done with testing, run `vagrant halt` to same resources.
+
 ### Run tests
 
 As usual, run `go test`, or `go test -v`.  To run one test in particular,
