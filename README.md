@@ -14,6 +14,8 @@ using the `TEST_VM` environment variable, or use [Vagrant](https://www.vagrantup
 
 ```bash
 $ vagrant box add bento/ubuntu-16.04
+# select virtualbox as provider
+
 $ vagrant up
 ```
 
