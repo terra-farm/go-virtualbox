@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 )
 
 var (
@@ -24,7 +25,7 @@ func GetGuestProperty(vm string, prop string) (string, error) {
 		log.Print(err)
 		return "", err
 	}
-	log.Printf("out: '%s'", out)
+	out = strings.TrimSpace(out)
 	if Verbose {
 		log.Printf("out (trimmed): '%s'", out)
 	}

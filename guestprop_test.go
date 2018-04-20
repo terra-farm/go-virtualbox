@@ -8,8 +8,10 @@ import (
 func TestGuestProperty(t *testing.T) {
 	var vm = os.Getenv("TEST_VM")
 	if len(vm) <= 0 {
-		t.Fatal("Missing TEST_VM environment variable")
+		vm = "go-virtualbox"
+		t.Logf("Missing TEST_VM environment variable")
 	}
+	t.Logf("Using '%s'", vm)
 
 	err := SetGuestProperty(vm, "test_key", "test_val")
 	if err != nil {
