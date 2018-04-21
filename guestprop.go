@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	getRegexp = regexp.MustCompile("Value: (.*)$")
+	getRegexp = regexp.MustCompile("^Value: (.*)$")
 )
 
 // SetGuestProperty writes a VirtualBox guestproperty to the given value.
