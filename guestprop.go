@@ -39,3 +39,8 @@ func GetGuestProperty(vm string, prop string) (string, error) {
 		return match[1], nil
 	}
 }
+
+// DeleteGuestProperty deletes a VirtualBox guestproperty.
+func DeleteGuestProperty(vm string, prop string) error {
+	return vbm("guestproperty", "delete", vm, prop)
+}
