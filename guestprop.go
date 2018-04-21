@@ -35,9 +35,8 @@ func GetGuestProperty(vm string, prop string) (string, error) {
 	}
 	if len(match) != 2 {
 		return "", fmt.Errorf("No match with VBoxManage get guestproperty output")
-	} else {
-		return match[1], nil
 	}
+	return match[1], nil
 }
 
 // DeleteGuestProperty deletes a VirtualBox guestproperty.
