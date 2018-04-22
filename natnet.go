@@ -18,7 +18,7 @@ type NATNet struct {
 
 // NATNets gets all NAT networks in a  map keyed by NATNet.Name.
 func NATNets() (map[string]NATNet, error) {
-	out, err := vbmOut("list", "natnets")
+	out, err := Manage.runOut("list", "natnets")
 	if err != nil {
 		return nil, err
 	}

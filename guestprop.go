@@ -13,14 +13,14 @@ var (
 
 // SetGuestProperty writes a VirtualBox guestproperty to the given value.
 func SetGuestProperty(vm string, prop string, val string) error {
-	return vbm("guestproperty", "set", vm, prop, val)
+	return Manage.run("guestproperty", "set", vm, prop, val)
 }
 
 // GetGuestProperty reads a VirtualBox guestproperty.
 func GetGuestProperty(vm string, prop string) (string, error) {
 	var out string
 	var err error
-	out, err = vbmOut("guestproperty", "get", vm, prop)
+	out, err = Manage.runOut("guestproperty", "get", vm, prop)
 	if err != nil {
 		log.Print(err)
 		return "", err
@@ -41,5 +41,5 @@ func GetGuestProperty(vm string, prop string) (string, error) {
 
 // DeleteGuestProperty deletes a VirtualBox guestproperty.
 func DeleteGuestProperty(vm string, prop string) error {
-	return vbm("guestproperty", "delete", vm, prop)
+	return Manage.run("guestproperty", "delete", vm, prop)
 }

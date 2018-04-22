@@ -43,7 +43,14 @@ var (
 	ErrVBMNotFound     = errors.New("VBoxManage not found")
 )
 
-func vbm(args ...string) error {
+type manage struct{}
+
+var (
+	// Manage holds the command to run VBoxManage
+	Manage manage
+)
+
+func (manage) run(args ...string) error {
 	cmd := exec.Command(VBM, args...)
 	if Verbose {
 		cmd.Stdout = os.Stdout
@@ -59,7 +66,7 @@ func vbm(args ...string) error {
 	return nil
 }
 
-func vbmOut(args ...string) (string, error) {
+func (manage) runOut(args ...string) (string, error) {
 	cmd := exec.Command(VBM, args...)
 	if Verbose {
 		cmd.Stderr = os.Stderr
@@ -75,7 +82,7 @@ func vbmOut(args ...string) (string, error) {
 	return string(b), err
 }
 
-func vbmOutErr(args ...string) (string, string, error) {
+func (manage) runOutErr(args ...string) (string, string, error) {
 	cmd := exec.Command(VBM, args...)
 	if Verbose {
 		log.Printf("executing: %v %v", VBM, strings.Join(args, " "))
