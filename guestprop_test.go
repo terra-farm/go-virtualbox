@@ -31,7 +31,7 @@ func TestGuestProperty(t *testing.T) {
 
 	// Tests
 	if runMock {
-		mockCommand.EXPECT().run("guestproperty", "set", vm, "test_key", "test_val").Return(nil).Times(1)
+		mockCommand.EXPECT().run("guestproperty", "set", vm, "test_key", "test_val").Return(nil)
 	}
 	err := SetGuestProperty(vm, "test_key", "test_val")
 	if err != nil {
@@ -42,7 +42,7 @@ func TestGuestProperty(t *testing.T) {
 	}
 
 	if runMock {
-		mockCommand.EXPECT().run("guestproperty", "get", vm, "test_key").Return("test_val", nil).Times(1)
+		mockCommand.EXPECT().runOut("guestproperty", "get", vm, "test_key").Return("Value: test_val", nil).Times(1)
 	}
 	val, err := GetGuestProperty(vm, "test_key")
 	if err != nil {
@@ -70,7 +70,7 @@ func TestGuestProperty(t *testing.T) {
 
 	// ...and check that it is  no longer readable
 	if runMock {
-		mockCommand.EXPECT().run("guestproperty", "get", vm, "test_key").Return(nil, errors.New("foo")).Times(1)
+		mockCommand.EXPECT().runOut("guestproperty", "get", vm, "test_key").Return("", errors.New("foo")).Times(1)
 	}
 	_, err = GetGuestProperty(vm, "test_key")
 	if err == nil {
