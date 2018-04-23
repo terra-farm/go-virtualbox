@@ -9,7 +9,7 @@ func init() {
 }
 
 func TestVBMOut(t *testing.T) {
-	b, err := vbmOut("list", "vms")
+	b, err := Manage.runOut("list", "vms")
 	if err != nil {
 		t.Fatal(err)
 	}
