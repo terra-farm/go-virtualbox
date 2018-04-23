@@ -47,7 +47,7 @@ type manage struct{}
 
 var (
 	// Manage holds the command to run VBoxManage
-	Manage manage
+	Manage Command = manage{}
 )
 
 func (manage) run(args ...string) error {
