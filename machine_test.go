@@ -10,9 +10,8 @@ func TestMachine(t *testing.T) {
 	Setup(t)
 
 	if ManageMock != nil {
-		listVmsOut := "\"Ubuntu\" {2e16b1fc-675d-4a7a-a9a1-e89a8bde7874}\n" +
-			"\"go-virtualbox\" {def44546-e3da-4902-8d15-b91c99c80cbc}"
-		vmInfoOut := ReadTestData("vboxmanage-showvminfo-1.properties")
+		listVmsOut := ReadTestData("vboxmanage-list-vms-1.out")
+		vmInfoOut := ReadTestData("vboxmanage-showvminfo-1.out")
 		gomock.InOrder(
 			ManageMock.EXPECT().runOut("list", "vms").Return(listVmsOut, nil).Times(1),
 			ManageMock.EXPECT().runOutErr("showvminfo", "Ubuntu", "--machinereadable").Return(vmInfoOut, "", nil).Times(1),
