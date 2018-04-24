@@ -10,6 +10,7 @@ API doc at http://godoc.org/github.com/riobard/go-virtualbox
 <!-- TOC depthFrom:2 depthTo:4 -->
 
 - [Status](#status)
+- [Building](#building)
 - [Testing](#testing)
     - [Preparation](#preparation)
     - [Run tests](#run-tests)
@@ -24,6 +25,20 @@ API doc at http://godoc.org/github.com/riobard/go-virtualbox
 |-|----------|
 | CircleCI | https://circleci.com/gh/asnowfix/go-virtualbox |
 
+## Building
+
+First install dependencies
+
+```bash
+$ go get -v github.com/golang/dep/cmd/dep
+$ dep ensure -v
+```
+
+Then build:
+
+```bash
+$ go build -v
+```
 ## Testing 
 
 ### Preparation
