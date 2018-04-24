@@ -406,8 +406,8 @@ func (m *Machine) AttachStorage(ctlName string, medium StorageMedium) error {
 }
 func CloneMachine(baseImageName string, newImageName string, register bool) error{
 	if register {
-		return Manage.run("clonevm", baseImage, "--name", newImageName, "--register")
+		return Manage.run("clonevm", baseImageName, "--name", newImageName, "--register")
 	}else{
-		return Manage.run("clonevm", baseImage, "--name", newImageName)
+		return Manage.run("clonevm", baseImageName, "--name", newImageName)
 	}
 }
