@@ -5,8 +5,9 @@
 package virtualbox
 
 import (
-	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
+
+	gomock "github.com/golang/mock/gomock"
 )
 
 // MockCommand is a mock of Command interface
