@@ -5,6 +5,25 @@ experimental at the moment and you should expect frequent changes.
 
 API doc at http://godoc.org/github.com/riobard/go-virtualbox
 
+**Table of Contents**
+
+<!-- TOC depthFrom:2 depthTo:4 -->
+
+- [Status](#status)
+- [Testing](#testing)
+    - [Preparation](#preparation)
+    - [Run tests](#run-tests)
+
+<!-- /TOC -->
+
+## Status
+
+[![CircleCI](https://circleci.com/gh/asnowfix/go-virtualbox.svg?style=svg)](https://circleci.com/gh/asnowfix/go-virtualbox)
+
+| | Location |
+|-|----------|
+| CircleCI | https://circleci.com/gh/asnowfix/go-virtualbox |
+
 ## Testing 
 
 ### Preparation
@@ -38,3 +57,4 @@ Once you are done with testing, run `vagrant halt` to same resources.
 
 As usual, run `go test`, or `go test -v`.  To run one test in particular,
 run `go test --run TestGuestProperty`.
+
