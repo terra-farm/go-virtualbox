@@ -17,10 +17,11 @@ var (
 )
 
 var (
+	// ErrHostonlyInterfaceCreation is the error message created when VBoxManaged failed to create a new hostonly interface.
 	ErrHostonlyInterfaceCreation = errors.New("failed to create hostonly interface")
 )
 
-// Host-only network.
+// HostonlyNet defines each host-only network.
 type HostonlyNet struct {
 	Name        string
 	GUID        string

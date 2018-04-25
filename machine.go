@@ -9,35 +9,42 @@ import (
 	"time"
 )
 
+// MachineState stores the last retrieved VM state.
 type MachineState string
 
 const (
+	// Poweroff is a MachineState value.
 	Poweroff = MachineState("poweroff")
-	Running  = MachineState("running")
-	Paused   = MachineState("paused")
-	Saved    = MachineState("saved")
-	Aborted  = MachineState("aborted")
+	// Running is a MachineState value.
+	Running = MachineState("running")
+	// Paused is a MachineState value.
+	Paused = MachineState("paused")
+	// Saved is a MachineState value.
+	Saved = MachineState("saved")
+	// Aborted is a MachineState value.
+	Aborted = MachineState("aborted")
 )
 
+// Flag is an active VM configuration toggle
 type Flag int
 
 // Flag names in lowercases to be consistent with VBoxManage options.
 const (
-	F_acpi Flag = 1 << iota
-	F_ioapic
-	F_rtcuseutc
-	F_cpuhotplug
-	F_pae
-	F_longmode
-	F_synthcpu
-	F_hpet
-	F_hwvirtex
-	F_triplefaultreset
-	F_nestedpaging
-	F_largepages
-	F_vtxvpid
-	F_vtxux
-	F_accelerate3d
+	acpi Flag = 1 << iota
+	ioapic
+	rtcuseutc
+	cpuhotplug
+	pae
+	longmode
+	synthcpu
+	hpet
+	hwvirtex
+	triplefaultreset
+	nestedpaging
+	largepages
+	vtxvpid
+	vtxux
+	accelerate3d
 )
 
 // Convert bool to "on"/"off"
@@ -48,7 +55,7 @@ func bool2string(b bool) string {
 	return "off"
 }
 
-// Test if flag is set. Return "on" or "off".
+// Get tests if flag is set. Return "on" or "off".
 func (f Flag) Get(o Flag) string {
 	return bool2string(f&o == o)
 }
@@ -93,12 +100,12 @@ func (m *Machine) Start() error {
 	return nil
 }
 
-//DisconnectSerialPort sets given serial port to disconnected
+// DisconnectSerialPort sets given serial port to disconnected.
 func (m *Machine) DisconnectSerialPort(portNumber int) error {
 	return Manage.run("modifyvm", m.Name, fmt.Sprintf("--uartmode%d", portNumber), "disconnected")
 }
 
-// Suspend suspends the machine and saves its state to disk.
+// Save suspends the machine and saves its state to disk.
 func (m *Machine) Save() error {
 	switch m.State {
 	case Paused:
@@ -319,21 +326,21 @@ func (m *Machine) Modify() error {
 		"--memory", fmt.Sprintf("%d", m.Memory),
 		"--vram", fmt.Sprintf("%d", m.VRAM),
 
-		"--acpi", m.Flag.Get(F_acpi),
-		"--ioapic", m.Flag.Get(F_ioapic),
-		"--rtcuseutc", m.Flag.Get(F_rtcuseutc),
-		"--cpuhotplug", m.Flag.Get(F_cpuhotplug),
-		"--pae", m.Flag.Get(F_pae),
-		"--longmode", m.Flag.Get(F_longmode),
-		"--synthcpu", m.Flag.Get(F_synthcpu),
-		"--hpet", m.Flag.Get(F_hpet),
-		"--hwvirtex", m.Flag.Get(F_hwvirtex),
-		"--triplefaultreset", m.Flag.Get(F_triplefaultreset),
-		"--nestedpaging", m.Flag.Get(F_nestedpaging),
-		"--largepages", m.Flag.Get(F_largepages),
-		"--vtxvpid", m.Flag.Get(F_vtxvpid),
-		"--vtxux", m.Flag.Get(F_vtxux),
-		"--accelerate3d", m.Flag.Get(F_accelerate3d),
+		"--acpi", m.Flag.Get(acpi),
+		"--ioapic", m.Flag.Get(ioapic),
+		"--rtcuseutc", m.Flag.Get(rtcuseutc),
+		"--cpuhotplug", m.Flag.Get(cpuhotplug),
+		"--pae", m.Flag.Get(pae),
+		"--longmode", m.Flag.Get(longmode),
+		"--synthcpu", m.Flag.Get(synthcpu),
+		"--hpet", m.Flag.Get(hpet),
+		"--hwvirtex", m.Flag.Get(hwvirtex),
+		"--triplefaultreset", m.Flag.Get(triplefaultreset),
+		"--nestedpaging", m.Flag.Get(nestedpaging),
+		"--largepages", m.Flag.Get(largepages),
+		"--vtxvpid", m.Flag.Get(vtxvpid),
+		"--vtxux", m.Flag.Get(vtxux),
+		"--accelerate3d", m.Flag.Get(accelerate3d),
 	}
 
 	for i, dev := range m.BootOrder {

@@ -13,8 +13,10 @@ import (
 )
 
 var (
-	VBM     string // Path to VBoxManage utility.
-	Verbose bool   // Verbose mode.
+	// VBM holds the inferred path to the VBoxManage utility.
+	VBM string
+	// Verbose when set toggle the library in verbose execution mode.
+	Verbose bool
 )
 
 func init() {
@@ -38,9 +40,12 @@ var (
 )
 
 var (
-	ErrMachineExist    = errors.New("machine already exists")
+	// ErrMachineExist holds the error message when the machine already exists.
+	ErrMachineExist = errors.New("machine already exists")
+	// ErrMachineNotExist holds the error message when the machine does not exist.
 	ErrMachineNotExist = errors.New("machine does not exist")
-	ErrVBMNotFound     = errors.New("VBoxManage not found")
+	// ErrVBMNotFound holds the error message when the VBoxManage commands was not found.
+	ErrVBMNotFound = errors.New("VBoxManage not found")
 )
 
 type manage struct{}
