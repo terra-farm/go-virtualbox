@@ -19,11 +19,10 @@ API doc at http://godoc.org/github.com/riobard/go-virtualbox
 
 ## Status
 
-[![CircleCI](https://circleci.com/gh/asnowfix/go-virtualbox.svg?style=svg)](https://circleci.com/gh/asnowfix/go-virtualbox)
-
-| | Location |
+| Project | Status |
 |-|----------|
-| CircleCI | https://circleci.com/gh/asnowfix/go-virtualbox |
+| [CircleCI](https://circleci.com/gh/asnowfix/go-virtualbox) | [![CircleCI](https://circleci.com/gh/asnowfix/go-virtualbox.svg?style=svg)](https://circleci.com/gh/asnowfix/go-virtualbox) |
+| [TravisCI](https://travis-ci.org/asnowfix/go-virtualbox) | [![Build Status](https://travis-ci.org/asnowfix/go-virtualbox.svg?branch=master)](https://travis-ci.org/asnowfix/go-virtualbox) |
 
 ## Building
 
