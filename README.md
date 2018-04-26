@@ -20,10 +20,13 @@ API doc at http://godoc.org/github.com/riobard/go-virtualbox
 
 ## Status
 
-| Project | Status |
-|-|----------|
-| [CircleCI](https://circleci.com/gh/asnowfix/go-virtualbox) | [![CircleCI](https://circleci.com/gh/asnowfix/go-virtualbox.svg?style=svg)](https://circleci.com/gh/asnowfix/go-virtualbox) |
-| [TravisCI](https://travis-ci.org/asnowfix/go-virtualbox) | [![Build Status](https://travis-ci.org/asnowfix/go-virtualbox.svg?branch=master)](https://travis-ci.org/asnowfix/go-virtualbox) |
+| Project | Status | Notes |
+|---------|--------|-------|
+| [CircleCI](https://circleci.com/gh/asnowfix/go-virtualbox) | [![CircleCI](https://circleci.com/gh/asnowfix/go-virtualbox.svg?style=svg)](https://circleci.com/gh/asnowfix/go-virtualbox) | |
+| [TravisCI](https://travis-ci.org/asnowfix/go-virtualbox) | [![Build Status](https://travis-ci.org/asnowfix/go-virtualbox.svg?branch=master)](https://travis-ci.org/asnowfix/go-virtualbox) | |
+| [Go Report Card](https://goreportcard.com/) | [![Go Report Card](https://goreportcard.com/badge/github.com/asnowfix/go-virtualbox?style=flat-square)](https://goreportcard.com/report/github.com/asnowfix/go-virtualbox) | scan  code with `gofmt`, `go vet`, `gocyclo`, `golint`, `ineffassign`, `license` and `misspell`. |
+| [GoDoc](http://godoc.org) | [![Go Doc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square)](http://godoc.org/github.com/asnowfix/go-virtualbox) | |
+| Release | [![Release](https://img.shields.io/github/release/asnowfix/go-virtualbox.svg?style=flat-square)](https://github.com/asnowfix/go-virtualbox/releases/latest) | |
 
 ## Building
 
