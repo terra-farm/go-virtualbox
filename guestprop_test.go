@@ -62,3 +62,15 @@ func TestGuestProperty(t *testing.T) {
 
 	Teardown()
 }
+
+func _TestWaitGuestProperty(t *testing.T) {
+	Setup(t)
+
+	key, val, err := WaitGuestProperty(VM, "test_key")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("key='%s', val='%s'", key, val)
+
+	Teardown()
+}
