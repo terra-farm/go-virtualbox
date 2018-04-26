@@ -411,3 +411,10 @@ func (m *Machine) AttachStorage(ctlName string, medium StorageMedium) error {
 		"--medium", medium.Medium,
 	)
 }
+func CloneMachine(baseImageName string, newImageName string, register bool) error{
+	if register {
+		return Manage.run("clonevm", baseImageName, "--name", newImageName, "--register")
+	}else{
+		return Manage.run("clonevm", baseImageName, "--name", newImageName)
+	}
+}
