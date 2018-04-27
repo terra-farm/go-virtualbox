@@ -44,7 +44,7 @@ func GetGuestProperty(vm string, prop string) (string, error) {
 //
 // The key to wait for can be a fully defined key or a key wild-card (glob-pattern).
 // The first returned value is the property name that was changed.
-// The second returned value is the new property value
+// The second returned value is the new property value,
 // Deletion of the guestproperty causes WaitGuestProperty to return the
 // string.
 func WaitGuestProperty(vm string, prop string) (string, string, error) {
