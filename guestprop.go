@@ -7,6 +7,12 @@ import (
 	"strings"
 )
 
+// GuestProperty holds key, value and associated flags.
+type GuestProperty struct {
+	Name  string
+	Value string
+}
+
 var (
 	getRegexp  = regexp.MustCompile("^Value: ([^,]*)$")
 	waitRegexp = regexp.MustCompile("^Name: ([^,]*), value: ([^,]*), flags:.*$")
@@ -67,6 +73,33 @@ func WaitGuestProperty(vm string, prop string) (string, string, error) {
 		return "", "", fmt.Errorf("No match with VBoxManage wait guestproperty output")
 	}
 	return match[1], match[2], nil
+}
+
+func WaitGetProperties(vm string, propPattern string) chan GuestProperty {
+	pc := make(chan GuestProperty, 10)
+
+	go func(pc chan GuestProperty) {
+		for {
+			if Verbose {
+				log.Printf("WaitGetProperties(): waiting for: '%s' changes", propPattern)
+			}
+			name, value, err := WaitGuestProperty(vm, propPattern)
+			if err != nil {
+				log.Printf("WaitGetProperties(): %v", err)
+				break
+			}
+			prop := GuestProperty{name, value}
+			if Verbose {
+				log.Printf("WaitGetProperties(): stacking: %+v", prop)
+			}
+			pc <- prop
+		}
+		if Verbose {
+			log.Printf("WaitGetProperties(): closing")
+		}
+		close(pc)
+	}(pc)
+	return pc
 }
 
 // DeleteGuestProperty deletes a VirtualBox guestproperty.
