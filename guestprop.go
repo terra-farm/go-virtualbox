@@ -56,6 +56,9 @@ func GetGuestProperty(vm string, prop string) (string, error) {
 func WaitGuestProperty(vm string, prop string) (string, string, error) {
 	var out string
 	var err error
+	if Verbose {
+		log.Printf("WaitGuestProperty(): wait on '%s'", prop)
+	}
 	out, err = Manage.runOut("guestproperty", "wait", vm, prop)
 	if err != nil {
 		log.Print(err)
@@ -63,11 +66,11 @@ func WaitGuestProperty(vm string, prop string) (string, string, error) {
 	}
 	out = strings.TrimSpace(out)
 	if Verbose {
-		log.Printf("out (trimmed): '%s'", out)
+		log.Printf("WaitGuestProperty(): out (trimmed): '%s'", out)
 	}
 	var match = waitRegexp.FindStringSubmatch(out)
 	if Verbose {
-		log.Print("match:", match)
+		log.Print("WaitGuestProperty(): match:", match)
 	}
 	if len(match) != 3 {
 		return "", "", fmt.Errorf("No match with VBoxManage wait guestproperty output")
@@ -75,31 +78,34 @@ func WaitGuestProperty(vm string, prop string) (string, string, error) {
 	return match[1], match[2], nil
 }
 
-func WaitGetProperties(vm string, propPattern string) chan GuestProperty {
-	pc := make(chan GuestProperty, 10)
-
-	go func(pc chan GuestProperty) {
+func WaitGetProperties(vm string, propPattern string, propsChan *chan GuestProperty, doneC chan bool) {
+	go func() {
+		defer close(*propsChan)
 		for {
 			if Verbose {
 				log.Printf("WaitGetProperties(): waiting for: '%s' changes", propPattern)
 			}
 			name, value, err := WaitGuestProperty(vm, propPattern)
 			if err != nil {
-				log.Printf("WaitGetProperties(): %v", err)
-				break
+				log.Printf("WaitGetProperties(): err=%v", err)
+				return
 			}
 			prop := GuestProperty{name, value}
-			if Verbose {
-				log.Printf("WaitGetProperties(): stacking: %+v", prop)
+			select {
+			case *propsChan <- prop:
+				if Verbose {
+					log.Printf("WaitGetProperties(): stacked: %+v", prop)
+				}
+			case done := <-doneC:
+				if Verbose {
+					log.Printf("WaitGetProperties(): done=%v", done)
+				}
+				if done {
+					return
+				}
 			}
-			pc <- prop
 		}
-		if Verbose {
-			log.Printf("WaitGetProperties(): closing")
-		}
-		close(pc)
-	}(pc)
-	return pc
+	}()
 }
 
 // DeleteGuestProperty deletes a VirtualBox guestproperty.

@@ -63,7 +63,7 @@ func TestGuestProperty(t *testing.T) {
 	Teardown()
 }
 
-func _TestWaitGuestProperty(t *testing.T) {
+func TestWaitGuestProperty(t *testing.T) {
 	Setup(t)
 
 	key, val, err := WaitGuestProperty(VM, "test_key")
@@ -79,14 +79,23 @@ func TestWaitGuestProperties(t *testing.T) {
 	Setup(t)
 
 	props := "test_*"
-	fmt.Printf("will wait on '%s'\n", props)
-	pc := WaitGetProperties(VM, props)
+	fmt.Printf("TestWaitGuestProperties(): will wait on '%s'\n", props)
+	propsChan := make(chan GuestProperty)
+	doneC := make(chan bool)
+	WaitGetProperties(VM, props, &propsChan, doneC)
 
-	fmt.Printf("waiting on: %T(%v)\n", pc, pc)
-	for prop := range pc {
-		fmt.Printf("unstacking: %+v\n", prop)
+	fmt.Printf("TestWaitGuestProperties(): waiting on: %T(%v)\n", propsChan, propsChan)
+	// for prop := range propsChan {
+	ok := true
+	read := 3
+	for ok && read > 0 {
+		var prop GuestProperty
+		prop, ok = <-propsChan
+		fmt.Printf("TestWaitGuestProperties(): unstacking: %+v (read=%d)\n", prop, read)
+		read--
 	}
-	fmt.Printf("exiting\n")
+	doneC <- true
+	fmt.Printf("TestWaitGuestProperties(): exiting\n")
 
 	Teardown()
 }
