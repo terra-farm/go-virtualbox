@@ -79,6 +79,17 @@ func WaitGuestProperty(vm string, prop string) (string, string, error) {
 	return match[1], match[2], nil
 }
 
+// WaitGetProperties wait for changes in GuestProperties
+//
+// WaitGetProperties wait for changes in the VirtualBox GuestProperties matching
+// the given propsPattern, for the given VM.  It returns a channel of GuestProperty
+// objects (name-values pairs) populated as they change, a once-only bool channel to tell
+// the GuestPropertiesWaiter Go routine to exit and a sync.WaitGroup to synchronize
+// with the Go routine termination, if needed.
+//
+// If no bool is every written in the bool channel, the Waiter Go routine never ends,
+// but on VBoxManage error.
+//
 func WaitGetProperties(vm string, propPattern string) (chan GuestProperty, chan bool, *sync.WaitGroup) {
 
 	propsC := make(chan GuestProperty, 10)
