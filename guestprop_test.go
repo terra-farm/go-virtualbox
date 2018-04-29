@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+
+	"github.com/golang/mock/gomock"
 )
 
 func TestGuestProperty(t *testing.T) {
@@ -59,6 +61,60 @@ func TestGuestProperty(t *testing.T) {
 	if Verbose {
 		t.Logf("OK GetGuestProperty test_key=empty")
 	}
+
+	Teardown()
+}
+
+func TestWaitGuestProperty(t *testing.T) {
+	Setup(t)
+
+	if ManageMock != nil {
+		waitGuestPropertiesOut := ReadTestData("vboxmanage-guestproperty-wait-1.out")
+		gomock.InOrder(
+			ManageMock.EXPECT().runOut("guestproperty", "wait", VM, "test_*").Return(waitGuestPropertiesOut, nil).Times(1),
+		)
+	}
+
+	key, val, err := WaitGuestProperty(VM, "test_*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("key='%s', val='%s'", key, val)
+
+	Teardown()
+}
+
+func TestWaitGuestProperties(t *testing.T) {
+	Setup(t)
+
+	left := 2
+
+	if ManageMock != nil {
+		waitGuestPropertiesOut := ReadTestData("vboxmanage-guestproperty-wait-1.out")
+		gomock.InOrder(
+			ManageMock.EXPECT().runOut("guestproperty", "wait", VM, "test_*").Return(waitGuestPropertiesOut, nil).Times(left + 1),
+		)
+	}
+
+	props := "test_*"
+	fmt.Printf("TestWaitGuestProperties(): will wait on '%s' for %d changes\n", props, left)
+	propsC, doneC, wg := WaitGetProperties(VM, props)
+
+	fmt.Printf("TestWaitGuestProperties(): waiting on: %T(%v)\n", propsC, propsC)
+	// for prop := range propsChan {
+	ok := true
+	for ; ok && left > 0; left-- {
+		var prop GuestProperty
+		fmt.Printf("TestWaitGuestProperties(): unstacking... (left=%d)\n", left)
+		prop, ok = <-propsC
+		fmt.Printf("TestWaitGuestProperties(): unstacked: %+v (left=%d)\n", prop, left)
+	}
+	fmt.Printf("TestWaitGuestProperties(): done...\n")
+	doneC <- true
+	fmt.Printf("TestWaitGuestProperties(): done... Ok\n")
+
+	wg.Wait()
+	fmt.Printf("TestWaitGuestProperties(): exiting\n")
 
 	Teardown()
 }
