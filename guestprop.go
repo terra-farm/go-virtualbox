@@ -79,9 +79,15 @@ func WaitGuestProperty(vm string, prop string) (string, string, error) {
 	return match[1], match[2], nil
 }
 
-func WaitGetProperties(vm string, propPattern string, propsChan *chan GuestProperty, doneC chan bool, wg *sync.WaitGroup) {
+func WaitGetProperties(vm string, propPattern string) (chan GuestProperty, chan bool, *sync.WaitGroup) {
+
+	propsC := make(chan GuestProperty, 10)
+	doneC := make(chan bool)
+	wg := new(sync.WaitGroup)
+	wg.Add(1)
+
 	go func() {
-		defer close(*propsChan)
+		defer close(propsC)
 		defer wg.Done()
 
 		for {
@@ -95,7 +101,7 @@ func WaitGetProperties(vm string, propPattern string, propsChan *chan GuestPrope
 			}
 			prop := GuestProperty{name, value}
 			select {
-			case *propsChan <- prop:
+			case propsC <- prop:
 				if Verbose {
 					log.Printf("WaitGetProperties(): stacked: %+v", prop)
 				}
@@ -109,6 +115,8 @@ func WaitGetProperties(vm string, propPattern string, propsChan *chan GuestPrope
 			}
 		}
 	}()
+
+	return propsC, doneC, wg
 }
 
 // DeleteGuestProperty deletes a VirtualBox guestproperty.
