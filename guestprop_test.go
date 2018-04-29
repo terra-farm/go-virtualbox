@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+
+	"github.com/golang/mock/gomock"
 )
 
 func TestGuestProperty(t *testing.T) {
@@ -66,7 +68,14 @@ func TestGuestProperty(t *testing.T) {
 func TestWaitGuestProperty(t *testing.T) {
 	Setup(t)
 
-	key, val, err := WaitGuestProperty(VM, "test_key")
+	if ManageMock != nil {
+		waitGuestPropertiesOut := ReadTestData("vboxmanage-guestproperty-wait-1.out")
+		gomock.InOrder(
+			ManageMock.EXPECT().runOut("guestproperty", "wait", VM, "test_*").Return(waitGuestPropertiesOut, nil).Times(1),
+		)
+	}
+
+	key, val, err := WaitGuestProperty(VM, "test_*")
 	if err != nil {
 		t.Fatal(err)
 	}
