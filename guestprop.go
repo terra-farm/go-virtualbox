@@ -90,10 +90,13 @@ func WaitGuestProperty(vm string, prop string) (string, string, error) {
 // If no bool is every written in the bool channel, the Waiter Go routine never ends,
 // but on VBoxManage error.
 //
+// Each GuestProperty change must be read from thwe channel before the waiter Go
+// routine resumes waiting for the next matching change.
+//
 func WaitGetProperties(vm string, propPattern string) (chan GuestProperty, chan bool, *sync.WaitGroup) {
 
-	propsC := make(chan GuestProperty, 10)
-	doneC := make(chan bool)
+	propsC := make(chan GuestProperty)
+	doneC := make(chan bool, 1)
 	wg := new(sync.WaitGroup)
 	wg.Add(1)
 

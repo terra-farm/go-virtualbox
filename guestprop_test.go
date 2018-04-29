@@ -87,22 +87,31 @@ func TestWaitGuestProperty(t *testing.T) {
 func TestWaitGuestProperties(t *testing.T) {
 	Setup(t)
 
+	left := 2
+
+	if ManageMock != nil {
+		waitGuestPropertiesOut := ReadTestData("vboxmanage-guestproperty-wait-1.out")
+		gomock.InOrder(
+			ManageMock.EXPECT().runOut("guestproperty", "wait", VM, "test_*").Return(waitGuestPropertiesOut, nil).Times(left + 1),
+		)
+	}
+
 	props := "test_*"
-	fmt.Printf("TestWaitGuestProperties(): will wait on '%s'\n", props)
+	fmt.Printf("TestWaitGuestProperties(): will wait on '%s' for %d changes\n", props, left)
 	propsC, doneC, wg := WaitGetProperties(VM, props)
 
 	fmt.Printf("TestWaitGuestProperties(): waiting on: %T(%v)\n", propsC, propsC)
 	// for prop := range propsChan {
 	ok := true
-	read := 3
-	for ok && read > 0 {
+	for ; ok && left > 0; left-- {
 		var prop GuestProperty
+		fmt.Printf("TestWaitGuestProperties(): unstacking... (left=%d)\n", left)
 		prop, ok = <-propsC
-		fmt.Printf("TestWaitGuestProperties(): unstacking: %+v (read=%d)\n", prop, read)
-		read--
+		fmt.Printf("TestWaitGuestProperties(): unstacked: %+v (left=%d)\n", prop, left)
 	}
+	fmt.Printf("TestWaitGuestProperties(): done...\n")
 	doneC <- true
-	fmt.Printf("TestWaitGuestProperties(): done\n")
+	fmt.Printf("TestWaitGuestProperties(): done... Ok\n")
 
 	wg.Wait()
 	fmt.Printf("TestWaitGuestProperties(): exiting\n")
