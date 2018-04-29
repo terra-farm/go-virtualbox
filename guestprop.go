@@ -5,6 +5,7 @@ import (
 	"log"
 	"regexp"
 	"strings"
+	"sync"
 )
 
 // GuestProperty holds key, value and associated flags.
@@ -78,9 +79,11 @@ func WaitGuestProperty(vm string, prop string) (string, string, error) {
 	return match[1], match[2], nil
 }
 
-func WaitGetProperties(vm string, propPattern string, propsChan *chan GuestProperty, doneC chan bool) {
+func WaitGetProperties(vm string, propPattern string, propsChan *chan GuestProperty, doneC chan bool, wg *sync.WaitGroup) {
 	go func() {
 		defer close(*propsChan)
+		defer wg.Done()
+
 		for {
 			if Verbose {
 				log.Printf("WaitGetProperties(): waiting for: '%s' changes", propPattern)

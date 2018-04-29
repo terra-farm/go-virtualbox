@@ -3,6 +3,7 @@ package virtualbox
 import (
 	"errors"
 	"fmt"
+	"sync"
 	"testing"
 )
 
@@ -82,7 +83,9 @@ func TestWaitGuestProperties(t *testing.T) {
 	fmt.Printf("TestWaitGuestProperties(): will wait on '%s'\n", props)
 	propsChan := make(chan GuestProperty)
 	doneC := make(chan bool)
-	WaitGetProperties(VM, props, &propsChan, doneC)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	WaitGetProperties(VM, props, &propsChan, doneC, &wg)
 
 	fmt.Printf("TestWaitGuestProperties(): waiting on: %T(%v)\n", propsChan, propsChan)
 	// for prop := range propsChan {
@@ -95,6 +98,9 @@ func TestWaitGuestProperties(t *testing.T) {
 		read--
 	}
 	doneC <- true
+	fmt.Printf("TestWaitGuestProperties(): done\n")
+
+	wg.Wait()
 	fmt.Printf("TestWaitGuestProperties(): exiting\n")
 
 	Teardown()
