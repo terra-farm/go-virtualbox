@@ -10,8 +10,6 @@ import (
 var (
 	// VBM holds the inferred path to the VBoxManage utility.
 	VBM string
-	// Verbose when set toggle the library in verbose execution mode.
-	Verbose bool
 	// Manage holds the command to run VBoxManage
 	Manage Command
 )

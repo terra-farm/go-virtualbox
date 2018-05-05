@@ -18,6 +18,8 @@ type Command interface {
 }
 
 var (
+	// Verbose toggles the library in verbose execution mode.
+	Verbose bool
 	// ErrMachineExist holds the error message when the machine already exists.
 	ErrMachineExist = errors.New("machine already exists")
 	// ErrMachineNotExist holds the error message when the machine does not exist.
