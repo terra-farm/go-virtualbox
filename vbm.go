@@ -48,59 +48,8 @@ var (
 	ErrVBMNotFound = errors.New("VBoxManage not found")
 )
 
-type manage struct{}
-
 var (
 	// Manage holds the command to run VBoxManage
 	Manage Command = manage{}
 )
 
-func (manage) run(args ...string) error {
-	cmd := exec.Command(VBM, args...)
-	if Verbose {
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		log.Printf("executing: %v %v", VBM, strings.Join(args, " "))
-	}
-	if err := cmd.Run(); err != nil {
-		if ee, ok := err.(*exec.Error); ok && ee == exec.ErrNotFound {
-			return ErrVBMNotFound
-		}
-		return err
-	}
-	return nil
-}
-
-func (manage) runOut(args ...string) (string, error) {
-	cmd := exec.Command(VBM, args...)
-	if Verbose {
-		cmd.Stderr = os.Stderr
-		log.Printf("executing: %v %v", VBM, strings.Join(args, " "))
-	}
-
-	b, err := cmd.Output()
-	if err != nil {
-		if ee, ok := err.(*exec.Error); ok && ee == exec.ErrNotFound {
-			err = ErrVBMNotFound
-		}
-	}
-	return string(b), err
-}
-
-func (manage) runOutErr(args ...string) (string, string, error) {
-	cmd := exec.Command(VBM, args...)
-	if Verbose {
-		log.Printf("executing: %v %v", VBM, strings.Join(args, " "))
-	}
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-	err := cmd.Run()
-	if err != nil {
-		if ee, ok := err.(*exec.Error); ok && ee == exec.ErrNotFound {
-			err = ErrVBMNotFound
-		}
-	}
-	return stdout.String(), stderr.String(), err
-}
