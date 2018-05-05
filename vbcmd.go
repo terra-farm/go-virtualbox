@@ -2,6 +2,7 @@ package virtualbox
 
 import (
 	"bytes"
+	"errors"
 	"log"
 	"os"
 	"os/exec"
@@ -16,44 +17,55 @@ type Command interface {
 	runOutErr(args ...string) (string, string, error)
 }
 
-type command struct{}
+var (
+	// ErrMachineExist holds the error message when the machine already exists.
+	ErrMachineExist = errors.New("machine already exists")
+	// ErrMachineNotExist holds the error message when the machine does not exist.
+	ErrMachineNotExist = errors.New("machine does not exist")
+	// ErrCommandNotFound holds the error message when the VBoxManage commands was not found.
+	ErrCommandNotFound = errors.New("command not found")
+)
 
-func (command) run(args ...string) error {
-	cmd := exec.Command(VBM, args...)
+type command struct {
+	program string
+}
+
+func (vbcmd command) run(args ...string) error {
+	cmd := exec.Command(vbcmd.program, args...)
 	if Verbose {
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
-		log.Printf("executing: %v %v", VBM, strings.Join(args, " "))
+		log.Printf("executing: %v %v", vbcmd.program, strings.Join(args, " "))
 	}
 	if err := cmd.Run(); err != nil {
 		if ee, ok := err.(*exec.Error); ok && ee == exec.ErrNotFound {
-			return ErrVBMNotFound
+			return ErrCommandNotFound
 		}
 		return err
 	}
 	return nil
 }
 
-func (command) runOut(args ...string) (string, error) {
-	cmd := exec.Command(VBM, args...)
+func (vbcmd command) runOut(args ...string) (string, error) {
+	cmd := exec.Command(vbcmd.program, args...)
 	if Verbose {
 		cmd.Stderr = os.Stderr
-		log.Printf("executing: %v %v", VBM, strings.Join(args, " "))
+		log.Printf("executing: %v %v", vbcmd.program, strings.Join(args, " "))
 	}
 
 	b, err := cmd.Output()
 	if err != nil {
 		if ee, ok := err.(*exec.Error); ok && ee == exec.ErrNotFound {
-			err = ErrVBMNotFound
+			err = ErrCommandNotFound
 		}
 	}
 	return string(b), err
 }
 
-func (command) runOutErr(args ...string) (string, string, error) {
-	cmd := exec.Command(VBM, args...)
+func (vbcmd command) runOutErr(args ...string) (string, string, error) {
+	cmd := exec.Command(vbcmd.program, args...)
 	if Verbose {
-		log.Printf("executing: %v %v", VBM, strings.Join(args, " "))
+		log.Printf("executing: %v %v", vbcmd.program, strings.Join(args, " "))
 	}
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
@@ -62,7 +74,7 @@ func (command) runOutErr(args ...string) (string, string, error) {
 	err := cmd.Run()
 	if err != nil {
 		if ee, ok := err.(*exec.Error); ok && ee == exec.ErrNotFound {
-			err = ErrVBMNotFound
+			err = ErrCommandNotFound
 		}
 	}
 	return stdout.String(), stderr.String(), err
