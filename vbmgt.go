@@ -8,9 +8,7 @@ import (
 )
 
 var (
-	// VBM holds the inferred path to the VBoxManage utility.
-	VBM string
-	// Manage holds the command to run VBoxManage
+	// Manage holds the command to run VBoxManage.
 	Manage Command
 )
 
@@ -22,15 +20,15 @@ var (
 )
 
 func init() {
-	VBM = "VBoxManage"
+	vbmgt := "VBoxManage"
 	p := os.Getenv("VBOX_INSTALL_PATH")
 
 	if p != "" && runtime.GOOS == "windows" {
-		VBM = filepath.Join(p, "VBoxManage.exe")
+		vbmgt = filepath.Join(p, "VBoxManage.exe")
 	}
 	//Trying fallback if nothing works
-	if p == "" && runtime.GOOS == "windows" && VBM == "VBoxManage" {
-		VBM = filepath.Join("C:\\", "Program Files", "Oracle", "VirtualBox", "VBoxManage.exe")
+	if p == "" && runtime.GOOS == "windows" && vbmgt == "VBoxManage" {
+		vbmgt = filepath.Join("C:\\", "Program Files", "Oracle", "VirtualBox", "VBoxManage.exe")
 	}
-	Manage = command{program: VBM}
+	Manage = command{program: vbmgt}
 }

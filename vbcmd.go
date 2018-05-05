@@ -12,6 +12,7 @@ import (
 // Command is the mock-able interface to run VirtualBox commands
 // such as VBoxManage (host side) or VBoxControl (guest side)
 type Command interface {
+	path() string
 	run(args ...string) error
 	runOut(args ...string) (string, error)
 	runOutErr(args ...string) (string, string, error)
@@ -30,6 +31,10 @@ var (
 
 type command struct {
 	program string
+}
+
+func (vbcmd command) path() string {
+	return vbcmd.program
 }
 
 func (vbcmd command) run(args ...string) error {
