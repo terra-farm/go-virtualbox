@@ -2,6 +2,8 @@ package virtualbox
 
 import (
 	"os"
+	"os/exec"
+	"os/user"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -20,15 +22,44 @@ var (
 )
 
 func init() {
-	vbmgt := "VBoxManage"
-	p := os.Getenv("VBOX_INSTALL_PATH")
+	sudoer, _ := isSudoer()
+	vbprogs := []string{"VBoxManage", "VBoxControl"}
+	for _, vbprog := range vbprogs {
+		vbprog, err := lookupVBoxProgram(vbprog)
+		if err == nil {
+			Manage = command{program: vbprog, sudoer: sudoer}
+			break
+		}
+	}
+}
 
-	if p != "" && runtime.GOOS == "windows" {
-		vbmgt = filepath.Join(p, "VBoxManage.exe")
+func lookupVBoxProgram(vbprog string) (string, error) {
+
+	if runtime.GOOS == "windows" {
+		if p := os.Getenv("VBOX_INSTALL_PATH"); p != "" {
+			vbprog = filepath.Join(p, vbprog+".exe")
+		} else {
+			vbprog = filepath.Join("C:\\", "Program Files", "Oracle", "VirtualBox", vbprog+".exe")
+		}
 	}
-	//Trying fallback if nothing works
-	if p == "" && runtime.GOOS == "windows" && vbmgt == "VBoxManage" {
-		vbmgt = filepath.Join("C:\\", "Program Files", "Oracle", "VirtualBox", "VBoxManage.exe")
+
+	return exec.LookPath(vbprog)
+}
+
+func isSudoer() (bool, error) {
+	me, err := user.Current()
+	if err != nil {
+		return false, err
 	}
-	Manage = command{program: vbmgt}
+	if groupIDs, err := me.GroupIds(); runtime.GOOS == "linux" {
+		if err != nil {
+			return false, err
+		}
+		for _, groupID := range groupIDs {
+			if groupID == "sudo" {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
 }

@@ -6,17 +6,20 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"strings"
+	"runtime"
 )
 
 // Command is the mock-able interface to run VirtualBox commands
 // such as VBoxManage (host side) or VBoxControl (guest side)
 type Command interface {
+	setOpts(opts ...option)
 	path() string
 	run(args ...string) error
 	runOut(args ...string) (string, error)
 	runOutErr(args ...string) (string, string, error)
 }
+
+type option func(*Command)
 
 var (
 	// Verbose toggles the library in verbose execution mode.
@@ -31,18 +34,46 @@ var (
 
 type command struct {
 	program string
+	// Is current user a sudoer?
+	sudoer bool
+	// Is current command expected to be run under sudo?
+	sudo bool
+}
+
+func sudo(vbcmd *command) {
+	vbcmd.sudo = true
+}
+
+func (vbcmd command) setOpts(opts ...option) {
+	for _, opt := range opts {
+		var cmd Command = &vbcmd
+		opt(&cmd)
+	}
 }
 
 func (vbcmd command) path() string {
 	return vbcmd.program
 }
 
+func (vbcmd command) prepare(args []string) *exec.Cmd {
+	program := vbcmd.program
+	argv := []string{}
+	if vbcmd.sudoer && vbcmd.sudo && runtime.GOOS != "windows" {
+		program = "sudo"
+		argv = append(argv, vbcmd.program)
+	}
+	argv = append(argv, args...)
+	if Verbose {
+		log.Printf("executing: %v %v", program, argv)
+	}
+	return exec.Command(program, argv...)
+}
+
 func (vbcmd command) run(args ...string) error {
-	cmd := exec.Command(vbcmd.program, args...)
+	cmd := vbcmd.prepare(args)
 	if Verbose {
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
-		log.Printf("executing: %v %v", vbcmd.program, strings.Join(args, " "))
 	}
 	if err := cmd.Run(); err != nil {
 		if ee, ok := err.(*exec.Error); ok && ee == exec.ErrNotFound {
@@ -54,10 +85,9 @@ func (vbcmd command) run(args ...string) error {
 }
 
 func (vbcmd command) runOut(args ...string) (string, error) {
-	cmd := exec.Command(vbcmd.program, args...)
+	cmd := vbcmd.prepare(args)
 	if Verbose {
 		cmd.Stderr = os.Stderr
-		log.Printf("executing: %v %v", vbcmd.program, strings.Join(args, " "))
 	}
 
 	b, err := cmd.Output()
@@ -70,10 +100,7 @@ func (vbcmd command) runOut(args ...string) (string, error) {
 }
 
 func (vbcmd command) runOutErr(args ...string) (string, string, error) {
-	cmd := exec.Command(vbcmd.program, args...)
-	if Verbose {
-		log.Printf("executing: %v %v", vbcmd.program, strings.Join(args, " "))
-	}
+	cmd := vbcmd.prepare(args)
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 	cmd.Stdout = &stdout
