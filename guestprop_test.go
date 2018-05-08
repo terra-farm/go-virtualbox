@@ -69,29 +69,29 @@ func TestGuestProperty(t *testing.T) {
 func TestWaitGuestProperty(t *testing.T) {
 	Setup(t)
 
-	key1, val1 := "test_key", "test_val"
+	keyE, valE := "test_key", "test_val1"
 	if ManageMock != nil {
-		waitGuestPropertiesOut := ReadTestData("vboxmanage-guestproperty-wait-1.out")
+		waitGuestProperty1Out := ReadTestData("vboxmanage-guestproperty-wait-1.out")
 		gomock.InOrder(
-			ManageMock.EXPECT().runOut("guestproperty", "wait", VM, "test_*").Return(waitGuestPropertiesOut, nil).Times(1),
+			ManageMock.EXPECT().runOut("guestproperty", "wait", VM, "test_*").Return(waitGuestProperty1Out, nil).Times(1),
 		)
 	} else {
 		go func() {
 			second := time.Second
-			time.Sleep(2 * second)
-			t.Logf(">>> key='%s', val='%s'", key1, val1)
-			SetGuestProperty(VM, key1, val1)
+			time.Sleep(1 * second)
+			t.Logf(">>> key='%s', val='%s'", keyE, valE)
+			SetGuestProperty(VM, keyE, valE)
 		}()
 	}
 
-	key, val, err := WaitGuestProperty(VM, "test_*")
+	keyO, valO, err := WaitGuestProperty(VM, "test_*")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if key1 != key || val1 != val {
+	t.Logf("<<< key='%s', val='%s'", keyO, valO)
+	if keyE != keyO || valE != valO {
 		t.Fatal(errors.New("unexpected key/val"))
 	}
-	t.Logf("<<< key='%s', val='%s'", key, val)
 
 	Teardown()
 }
@@ -100,12 +100,32 @@ func TestWaitGuestProperties(t *testing.T) {
 	Setup(t)
 
 	left := 2
+	keyE, val1E, val2E := "test_key", "test_val1", "test_val2"
 
 	if ManageMock != nil {
-		waitGuestPropertiesOut := ReadTestData("vboxmanage-guestproperty-wait-1.out")
+		waitGuestProperty1Out := ReadTestData("vboxmanage-guestproperty-wait-1.out")
+		waitGuestProperty2Out := ReadTestData("vboxmanage-guestproperty-wait-2.out")
 		gomock.InOrder(
-			ManageMock.EXPECT().runOut("guestproperty", "wait", VM, "test_*").Return(waitGuestPropertiesOut, nil).Times(left + 1),
+			ManageMock.EXPECT().runOut("guestproperty", "wait", VM, "test_*").Return(waitGuestProperty1Out, nil).Times(1),
+			ManageMock.EXPECT().runOut("guestproperty", "wait", VM, "test_*").Return(waitGuestProperty2Out, nil).Times(1),
+			ManageMock.EXPECT().runOut("guestproperty", "wait", VM, "test_*").Return(waitGuestProperty1Out, nil).Times(1),
 		)
+	} else {
+		go func() {
+			second := time.Second
+
+			time.Sleep(1 * second)
+			t.Logf(">>> key='%s', val='%s'", keyE, val1E)
+			SetGuestProperty(VM, keyE, val1E)
+
+			time.Sleep(1 * second)
+			t.Logf(">>> key='%s', val='%s'", keyE, val2E)
+			SetGuestProperty(VM, keyE, val2E)
+
+			time.Sleep(1 * second)
+			t.Logf(">>> key='%s', val='%s'", keyE, val1E)
+			SetGuestProperty(VM, keyE, val1E)
+		}()
 	}
 
 	props := "test_*"
