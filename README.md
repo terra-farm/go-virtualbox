@@ -45,7 +45,7 @@ $ go build -v
 
 ## Documentation
 
-Run `godoc -http=:6060` and then `open http://localhost:6060/pkg/github.com/asnowfix/go-virtualbox/`.
+Run `godoc -http=:6060 &` and then `open http://localhost:6060/pkg/github.com/asnowfix/go-virtualbox/`.
 
 ## Testing 
 
