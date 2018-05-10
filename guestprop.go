@@ -21,6 +21,9 @@ var (
 
 // SetGuestProperty writes a VirtualBox guestproperty to the given value.
 func SetGuestProperty(vm string, prop string, val string) error {
+	if Manage.isGuest() {
+		return Manage.setOpts(sudo(true)).run("guestproperty", "set", prop, val)
+	}
 	return Manage.run("guestproperty", "set", vm, prop, val)
 }
 
@@ -28,6 +31,9 @@ func SetGuestProperty(vm string, prop string, val string) error {
 func GetGuestProperty(vm string, prop string) (string, error) {
 	var out string
 	var err error
+	if Manage.isGuest() {
+		out, err = Manage.setOpts(sudo(true)).runOut("guestproperty", "get", prop)
+	}
 	out, err = Manage.runOut("guestproperty", "get", vm, prop)
 	if err != nil {
 		log.Print(err)
@@ -59,6 +65,9 @@ func WaitGuestProperty(vm string, prop string) (string, string, error) {
 	var err error
 	if Verbose {
 		log.Printf("WaitGuestProperty(): wait on '%s'", prop)
+	}
+	if Manage.isGuest() {
+		out, err = Manage.setOpts(sudo(true)).runOut("guestproperty", "wait", prop)
 	}
 	out, err = Manage.runOut("guestproperty", "wait", vm, prop)
 	if err != nil {
@@ -135,5 +144,8 @@ func WaitGetProperties(vm string, propPattern string) (chan GuestProperty, chan 
 
 // DeleteGuestProperty deletes a VirtualBox guestproperty.
 func DeleteGuestProperty(vm string, prop string) error {
+	if Manage.isGuest() {
+		return Manage.setOpts(sudo(true)).run("guestproperty", "delete", prop)
+	}
 	return Manage.run("guestproperty", "delete", vm, prop)
 }

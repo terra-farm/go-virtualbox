@@ -22,13 +22,13 @@ var (
 
 func init() {
 	sudoer, _ := isSudoer()
-	vbprogs := []string{"VBoxManage", "VBoxControl"}
-	for _, vbprog := range vbprogs {
-		vbprog, err := lookupVBoxProgram(vbprog)
-		if err == nil {
-			Manage = command{program: vbprog, sudoer: sudoer}
-			break
-		}
+
+	if vbprog, err := lookupVBoxProgram("VBoxManage"); err == nil {
+		Manage = command{program: vbprog, sudoer: sudoer, guest: false}
+	} else if vbprog, err := lookupVBoxProgram("VBoxControl"); err == nil {
+		Manage = command{program: vbprog, sudoer: sudoer, guest: true}
+	} else {
+		panic("Did not find a VirtualBox management command")
 	}
 }
 

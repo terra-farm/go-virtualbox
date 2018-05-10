@@ -15,7 +15,8 @@ type option func(Command)
 // Command is the mock-able interface to run VirtualBox commands
 // such as VBoxManage (host side) or VBoxControl (guest side)
 type Command interface {
-	setOpts(opts ...option)
+	setOpts(opts ...option) Command
+	isGuest() bool
 	path() string
 	run(args ...string) error
 	runOut(args ...string) (string, error)
@@ -35,10 +36,9 @@ var (
 
 type command struct {
 	program string
-	// Is current user a sudoer?
-	sudoer bool
-	// Is current command expected to be run under sudo?
-	sudo bool
+	sudoer  bool // Is current user a sudoer?
+	sudo    bool // Is current command expected to be run under sudo?
+	guest   bool
 }
 
 func isSudoer() (bool, error) {
@@ -59,11 +59,12 @@ func isSudoer() (bool, error) {
 	return false, nil
 }
 
-func (vbcmd command) setOpts(opts ...option) {
+func (vbcmd command) setOpts(opts ...option) Command {
+	var cmd Command = &vbcmd
 	for _, opt := range opts {
-		var cmd Command = &vbcmd
 		opt(cmd)
 	}
+	return cmd
 }
 
 func sudo(sudo bool) option {
@@ -71,6 +72,10 @@ func sudo(sudo bool) option {
 		vbcmd := cmd.(*command)
 		vbcmd.sudo = sudo
 	}
+}
+
+func (vbcmd command) isGuest() bool {
+	return vbcmd.guest
 }
 
 func (vbcmd command) path() string {

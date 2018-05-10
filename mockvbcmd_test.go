@@ -33,17 +33,31 @@ func (m *MockCommand) EXPECT() *MockCommandMockRecorder {
 }
 
 // setOpts mocks base method
-func (m *MockCommand) setOpts(opts ...option) {
+func (m *MockCommand) setOpts(opts ...option) Command {
 	varargs := []interface{}{}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
-	m.ctrl.Call(m, "setOpts", varargs...)
+	ret := m.ctrl.Call(m, "setOpts", varargs...)
+	ret0, _ := ret[0].(Command)
+	return ret0
 }
 
 // setOpts indicates an expected call of setOpts
 func (mr *MockCommandMockRecorder) setOpts(opts ...interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "setOpts", reflect.TypeOf((*MockCommand)(nil).setOpts), opts...)
+}
+
+// isGuest mocks base method
+func (m *MockCommand) isGuest() bool {
+	ret := m.ctrl.Call(m, "isGuest")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// isGuest indicates an expected call of isGuest
+func (mr *MockCommandMockRecorder) isGuest() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isGuest", reflect.TypeOf((*MockCommand)(nil).isGuest))
 }
 
 // path mocks base method
