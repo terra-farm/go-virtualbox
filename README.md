@@ -88,3 +88,8 @@ run `go test --run TestGuestProperty`.
 ```bash
 mockgen -source=vbcmd.go -destination=mockvbcmd_test.go -package=virtualbox -mock_names=Command=MockCommand
 ```
+
+## Caveats
+
+> I _know_ this code is _awful_: it is my GoLang ramp-up playground.  I hope to
+> make progress in GoLang & improve the code accordingly.
