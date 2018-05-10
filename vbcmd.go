@@ -6,8 +6,11 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"os/user"
 	"runtime"
 )
+
+type option func(Command)
 
 // Command is the mock-able interface to run VirtualBox commands
 // such as VBoxManage (host side) or VBoxControl (guest side)
@@ -18,8 +21,6 @@ type Command interface {
 	runOut(args ...string) (string, error)
 	runOutErr(args ...string) (string, string, error)
 }
-
-type option func(*Command)
 
 var (
 	// Verbose toggles the library in verbose execution mode.
@@ -40,14 +41,35 @@ type command struct {
 	sudo bool
 }
 
-func sudo(vbcmd *command) {
-	vbcmd.sudo = true
+func isSudoer() (bool, error) {
+	me, err := user.Current()
+	if err != nil {
+		return false, err
+	}
+	if groupIDs, err := me.GroupIds(); runtime.GOOS == "linux" {
+		if err != nil {
+			return false, err
+		}
+		for _, groupID := range groupIDs {
+			if groupID == "sudo" {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
 }
 
 func (vbcmd command) setOpts(opts ...option) {
 	for _, opt := range opts {
 		var cmd Command = &vbcmd
-		opt(&cmd)
+		opt(cmd)
+	}
+}
+
+func sudo(sudo bool) option {
+	return func(cmd Command) {
+		vbcmd := cmd.(*command)
+		vbcmd.sudo = sudo
 	}
 }
 
@@ -70,6 +92,7 @@ func (vbcmd command) prepare(args []string) *exec.Cmd {
 }
 
 func (vbcmd command) run(args ...string) error {
+	defer vbcmd.setOpts(sudo(false))
 	cmd := vbcmd.prepare(args)
 	if Verbose {
 		cmd.Stdout = os.Stdout
@@ -85,6 +108,7 @@ func (vbcmd command) run(args ...string) error {
 }
 
 func (vbcmd command) runOut(args ...string) (string, error) {
+	defer vbcmd.setOpts(sudo(false))
 	cmd := vbcmd.prepare(args)
 	if Verbose {
 		cmd.Stderr = os.Stderr
@@ -100,6 +124,7 @@ func (vbcmd command) runOut(args ...string) (string, error) {
 }
 
 func (vbcmd command) runOutErr(args ...string) (string, string, error) {
+	defer vbcmd.setOpts(sudo(false))
 	cmd := vbcmd.prepare(args)
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer

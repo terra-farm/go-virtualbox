@@ -3,7 +3,6 @@ package virtualbox
 import (
 	"os"
 	"os/exec"
-	"os/user"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -44,22 +43,4 @@ func lookupVBoxProgram(vbprog string) (string, error) {
 	}
 
 	return exec.LookPath(vbprog)
-}
-
-func isSudoer() (bool, error) {
-	me, err := user.Current()
-	if err != nil {
-		return false, err
-	}
-	if groupIDs, err := me.GroupIds(); runtime.GOOS == "linux" {
-		if err != nil {
-			return false, err
-		}
-		for _, groupID := range groupIDs {
-			if groupID == "sudo" {
-				return true, nil
-			}
-		}
-	}
-	return false, nil
 }
