@@ -16,7 +16,8 @@ func logLn(msg string) {
 }
 
 func logF(format string, args ...interface{}) {
-	if !testing.Verbose() {
+	Verbose = testing.Verbose()
+	if !Verbose {
 		return
 	}
 	logLn(fmt.Sprintf(format, args...))
