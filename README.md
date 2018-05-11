@@ -28,6 +28,17 @@ API doc at http://godoc.org/github.com/riobard/go-virtualbox
 | [GoDoc](http://godoc.org) | [![Go Doc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square)](http://godoc.org/github.com/asnowfix/go-virtualbox) | |
 | Release | [![Release](https://img.shields.io/github/release/asnowfix/go-virtualbox.svg?style=flat-square)](https://github.com/asnowfix/go-virtualbox/releases/latest) | |
 
+## Usage
+
+The part of the library that manages guest properties can run both from the Host and the Guest.
+
+```go
+    err := virtualbox.SetGuestProperty("MyVM", "test_key", "test_val")
+    val, err := GetGuestProperty(VM, "test_key")
+```
+
+See [GoDoc](https://godoc.org/github.com/asnowfix/go-virtualbox) for full details.
+
 ## Building
 
 First install dependencies
@@ -42,6 +53,11 @@ Then build:
 ```bash
 $ go build -v
 ```
+
+## Documentation
+
+Run `godoc -http=:6060 &` and then `open http://localhost:6060/pkg/github.com/asnowfix/go-virtualbox/`.
+
 ## Testing 
 
 ### Preparation
@@ -81,5 +97,10 @@ run `go test --run TestGuestProperty`.
 ### Re-generate mock
 
 ```bash
-mockgen -source=vbcmd.go -destination=mockvbcmd_test.go -package=virtualbox_test -mock_names=Command=MockCommand
+mockgen -source=vbcmd.go -destination=mockvbcmd_test.go -package=virtualbox -mock_names=Command=MockCommand
 ```
+
+## Caveats
+
+> I _know_ this code is _awful_: it is my GoLang ramp-up playground.  I hope to
+> make progress in GoLang & improve the code accordingly.

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 )
@@ -13,17 +14,17 @@ func TestGuestProperty(t *testing.T) {
 
 	t.Logf("ManageMock=%v (type=%T)", ManageMock, ManageMock)
 	if ManageMock != nil {
+		ManageMock.EXPECT().isGuest().Return(false)
 		ManageMock.EXPECT().run("guestproperty", "set", VM, "test_key", "test_val").Return(nil)
 	}
 	err := SetGuestProperty(VM, "test_key", "test_val")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if Verbose {
-		t.Logf("OK SetGuestProperty test_key=test_val")
-	}
+	t.Logf("OK SetGuestProperty test_key=test_val")
 
 	if ManageMock != nil {
+		ManageMock.EXPECT().isGuest().Return(false)
 		ManageMock.EXPECT().runOut("guestproperty", "get", VM, "test_key").Return("Value: test_val", nil).Times(1)
 	}
 	val, err := GetGuestProperty(VM, "test_key")
@@ -34,33 +35,29 @@ func TestGuestProperty(t *testing.T) {
 	if val != "test_val" {
 		t.Fatal("Wrong value")
 	}
-	if Verbose {
-		t.Logf("OK GetGuestProperty test_key=test_val")
-	}
+	Debug("OK GetGuestProperty test_key=test_val")
 
 	// Now deletes it...
 	if ManageMock != nil {
+		ManageMock.EXPECT().isGuest().Return(false)
 		ManageMock.EXPECT().run("guestproperty", "delete", VM, "test_key").Return(nil).Times(1)
 	}
 	err = DeleteGuestProperty(VM, "test_key")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if Verbose {
-		t.Logf("OK DeleteGuestProperty test_key")
-	}
+	Debug("OK DeleteGuestProperty test_key")
 
 	// ...and check that it is  no longer readable
 	if ManageMock != nil {
+		ManageMock.EXPECT().isGuest().Return(false)
 		ManageMock.EXPECT().runOut("guestproperty", "get", VM, "test_key").Return("", errors.New("foo")).Times(1)
 	}
 	_, err = GetGuestProperty(VM, "test_key")
 	if err == nil {
 		t.Fatal(fmt.Errorf("Failed deleting guestproperty"))
 	}
-	if Verbose {
-		t.Logf("OK GetGuestProperty test_key=empty")
-	}
+	Debug("OK GetGuestProperty test_key=empty")
 
 	Teardown()
 }
@@ -68,18 +65,30 @@ func TestGuestProperty(t *testing.T) {
 func TestWaitGuestProperty(t *testing.T) {
 	Setup(t)
 
+	keyE, valE := "test_key", "test_val1"
 	if ManageMock != nil {
-		waitGuestPropertiesOut := ReadTestData("vboxmanage-guestproperty-wait-1.out")
+		waitGuestProperty1Out := ReadTestData("vboxmanage-guestproperty-wait-1.out")
 		gomock.InOrder(
-			ManageMock.EXPECT().runOut("guestproperty", "wait", VM, "test_*").Return(waitGuestPropertiesOut, nil).Times(1),
+			ManageMock.EXPECT().isGuest().Return(false),
+			ManageMock.EXPECT().runOut("guestproperty", "wait", VM, "test_*").Return(waitGuestProperty1Out, nil).Times(1),
 		)
+	} else {
+		go func() {
+			second := time.Second
+			time.Sleep(1 * second)
+			t.Logf(">>> key='%s', val='%s'", keyE, valE)
+			SetGuestProperty(VM, keyE, valE)
+		}()
 	}
 
-	key, val, err := WaitGuestProperty(VM, "test_*")
+	keyO, valO, err := WaitGuestProperty(VM, "test_*")
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Logf("key='%s', val='%s'", key, val)
+	t.Logf("<<< key='%s', val='%s'", keyO, valO)
+	if keyE != keyO || valE != valO {
+		t.Fatal(errors.New("unexpected key/val"))
+	}
 
 	Teardown()
 }
@@ -88,33 +97,56 @@ func TestWaitGuestProperties(t *testing.T) {
 	Setup(t)
 
 	left := 2
+	keyE, val1E, val2E := "test_key", "test_val1", "test_val2"
 
 	if ManageMock != nil {
-		waitGuestPropertiesOut := ReadTestData("vboxmanage-guestproperty-wait-1.out")
+		waitGuestProperty1Out := ReadTestData("vboxmanage-guestproperty-wait-1.out")
+		waitGuestProperty2Out := ReadTestData("vboxmanage-guestproperty-wait-2.out")
 		gomock.InOrder(
-			ManageMock.EXPECT().runOut("guestproperty", "wait", VM, "test_*").Return(waitGuestPropertiesOut, nil).Times(left + 1),
+			ManageMock.EXPECT().isGuest().Return(false),
+			ManageMock.EXPECT().runOut("guestproperty", "wait", VM, "test_*").Return(waitGuestProperty1Out, nil).Times(1),
+			ManageMock.EXPECT().isGuest().Return(false),
+			ManageMock.EXPECT().runOut("guestproperty", "wait", VM, "test_*").Return(waitGuestProperty2Out, nil).Times(1),
+			ManageMock.EXPECT().isGuest().Return(false),
+			ManageMock.EXPECT().runOut("guestproperty", "wait", VM, "test_*").Return(waitGuestProperty1Out, nil).Times(1),
 		)
+	} else {
+		go func() {
+			second := time.Second
+
+			time.Sleep(1 * second)
+			t.Logf(">>> key='%s', val='%s'", keyE, val1E)
+			SetGuestProperty(VM, keyE, val1E)
+
+			time.Sleep(1 * second)
+			t.Logf(">>> key='%s', val='%s'", keyE, val2E)
+			SetGuestProperty(VM, keyE, val2E)
+
+			time.Sleep(1 * second)
+			t.Logf(">>> key='%s', val='%s'", keyE, val1E)
+			SetGuestProperty(VM, keyE, val1E)
+		}()
 	}
 
 	props := "test_*"
-	fmt.Printf("TestWaitGuestProperties(): will wait on '%s' for %d changes\n", props, left)
+	t.Logf("TestWaitGuestProperties(): will wait on '%s' for %d changes\n", props, left)
 	propsC, doneC, wg := WaitGetProperties(VM, props)
 
-	fmt.Printf("TestWaitGuestProperties(): waiting on: %T(%v)\n", propsC, propsC)
+	t.Logf("TestWaitGuestProperties(): waiting on: %T(%v)\n", propsC, propsC)
 	// for prop := range propsChan {
 	ok := true
 	for ; ok && left > 0; left-- {
 		var prop GuestProperty
-		fmt.Printf("TestWaitGuestProperties(): unstacking... (left=%d)\n", left)
+		t.Logf("TestWaitGuestProperties(): unstacking... (left=%d)\n", left)
 		prop, ok = <-propsC
-		fmt.Printf("TestWaitGuestProperties(): unstacked: %+v (left=%d)\n", prop, left)
+		t.Logf("TestWaitGuestProperties(): unstacked: %+v (left=%d)\n", prop, left)
 	}
-	fmt.Printf("TestWaitGuestProperties(): done...\n")
+	t.Logf("TestWaitGuestProperties(): done...\n")
 	doneC <- true
-	fmt.Printf("TestWaitGuestProperties(): done... Ok\n")
+	t.Logf("TestWaitGuestProperties(): done... Ok\n")
 
 	wg.Wait()
-	fmt.Printf("TestWaitGuestProperties(): exiting\n")
+	t.Logf("TestWaitGuestProperties(): exiting\n")
 
 	Teardown()
 }

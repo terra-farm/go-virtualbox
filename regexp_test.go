@@ -1,7 +1,6 @@
 package virtualbox
 
 import (
-	"log"
 	"os"
 	"regexp"
 	"testing"
@@ -20,7 +19,7 @@ func TestGetRegexp(t *testing.T) {
 		re = regexp.MustCompile(reStr)
 	}
 	var match = re.FindStringSubmatch(str)
-	log.Print("match:", match)
+	t.Log("match:", match)
 	if len(match) != 2 {
 		t.Fatal("No match")
 	}

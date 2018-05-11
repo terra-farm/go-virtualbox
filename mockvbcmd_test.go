@@ -5,9 +5,8 @@
 package virtualbox
 
 import (
-	reflect "reflect"
-
 	gomock "github.com/golang/mock/gomock"
+	reflect "reflect"
 )
 
 // MockCommand is a mock of Command interface
@@ -31,6 +30,46 @@ func NewMockCommand(ctrl *gomock.Controller) *MockCommand {
 // EXPECT returns an object that allows the caller to indicate expected use
 func (m *MockCommand) EXPECT() *MockCommandMockRecorder {
 	return m.recorder
+}
+
+// setOpts mocks base method
+func (m *MockCommand) setOpts(opts ...option) Command {
+	varargs := []interface{}{}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "setOpts", varargs...)
+	ret0, _ := ret[0].(Command)
+	return ret0
+}
+
+// setOpts indicates an expected call of setOpts
+func (mr *MockCommandMockRecorder) setOpts(opts ...interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "setOpts", reflect.TypeOf((*MockCommand)(nil).setOpts), opts...)
+}
+
+// isGuest mocks base method
+func (m *MockCommand) isGuest() bool {
+	ret := m.ctrl.Call(m, "isGuest")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// isGuest indicates an expected call of isGuest
+func (mr *MockCommandMockRecorder) isGuest() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isGuest", reflect.TypeOf((*MockCommand)(nil).isGuest))
+}
+
+// path mocks base method
+func (m *MockCommand) path() string {
+	ret := m.ctrl.Call(m, "path")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// path indicates an expected call of path
+func (mr *MockCommandMockRecorder) path() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "path", reflect.TypeOf((*MockCommand)(nil).path))
 }
 
 // run mocks base method
