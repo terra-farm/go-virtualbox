@@ -21,7 +21,7 @@ func TestGuestProperty(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	Debug("OK SetGuestProperty test_key=test_val")
+	t.Logf("OK SetGuestProperty test_key=test_val")
 
 	if ManageMock != nil {
 		ManageMock.EXPECT().isGuest().Return(false)
@@ -129,24 +129,24 @@ func TestWaitGuestProperties(t *testing.T) {
 	}
 
 	props := "test_*"
-	fmt.Printf("TestWaitGuestProperties(): will wait on '%s' for %d changes\n", props, left)
+	t.Logf("TestWaitGuestProperties(): will wait on '%s' for %d changes\n", props, left)
 	propsC, doneC, wg := WaitGetProperties(VM, props)
 
-	fmt.Printf("TestWaitGuestProperties(): waiting on: %T(%v)\n", propsC, propsC)
+	t.Logf("TestWaitGuestProperties(): waiting on: %T(%v)\n", propsC, propsC)
 	// for prop := range propsChan {
 	ok := true
 	for ; ok && left > 0; left-- {
 		var prop GuestProperty
-		fmt.Printf("TestWaitGuestProperties(): unstacking... (left=%d)\n", left)
+		t.Logf("TestWaitGuestProperties(): unstacking... (left=%d)\n", left)
 		prop, ok = <-propsC
-		fmt.Printf("TestWaitGuestProperties(): unstacked: %+v (left=%d)\n", prop, left)
+		t.Logf("TestWaitGuestProperties(): unstacked: %+v (left=%d)\n", prop, left)
 	}
-	fmt.Printf("TestWaitGuestProperties(): done...\n")
+	t.Logf("TestWaitGuestProperties(): done...\n")
 	doneC <- true
-	fmt.Printf("TestWaitGuestProperties(): done... Ok\n")
+	t.Logf("TestWaitGuestProperties(): done... Ok\n")
 
 	wg.Wait()
-	fmt.Printf("TestWaitGuestProperties(): exiting\n")
+	t.Logf("TestWaitGuestProperties(): exiting\n")
 
 	Teardown()
 }

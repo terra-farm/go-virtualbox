@@ -3,7 +3,6 @@ package virtualbox
 import (
 	"bytes"
 	"errors"
-	"log"
 	"os"
 	"os/exec"
 	"os/user"
@@ -46,10 +45,12 @@ func isSudoer() (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	Debug("User: '%+v'", me)
 	if groupIDs, err := me.GroupIds(); runtime.GOOS == "linux" {
 		if err != nil {
 			return false, err
 		}
+		Debug("groupIDs: '%+v'", groupIDs)
 		for _, groupID := range groupIDs {
 			if groupID == "sudo" {
 				return true, nil
@@ -85,6 +86,7 @@ func (vbcmd command) path() string {
 func (vbcmd command) prepare(args []string) *exec.Cmd {
 	program := vbcmd.program
 	argv := []string{}
+	Debug("Command: '%+v', runtime.GOOS: '%s'", vbcmd, runtime.GOOS)
 	if vbcmd.sudoer && vbcmd.sudo && runtime.GOOS != "windows" {
 		program = "sudo"
 		argv = append(argv, vbcmd.program)

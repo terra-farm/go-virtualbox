@@ -34,7 +34,7 @@ func Setup(t *testing.T) {
 	} else {
 		t.Logf("Using real VM='%s'\n", VM)
 	}
-	t.Logf("Using Manage='%T', path='%v'", Manage, Manage.path())
+	t.Logf("Using Manage='%+v' (type: '%T')", Manage, Manage)
 }
 
 func Teardown() {

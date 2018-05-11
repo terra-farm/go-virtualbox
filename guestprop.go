@@ -36,7 +36,6 @@ func GetGuestProperty(vm string, prop string) (string, error) {
 	}
 	out, err = Manage.runOut("guestproperty", "get", vm, prop)
 	if err != nil {
-		log.Print(err)
 		return "", err
 	}
 	out = strings.TrimSpace(out)

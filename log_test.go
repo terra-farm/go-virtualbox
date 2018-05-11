@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"testing"
 )
 
 var logger = log.New(os.Stderr, "", 0)
@@ -15,6 +16,9 @@ func logLn(msg string) {
 }
 
 func logF(format string, args ...interface{}) {
+	if !testing.Verbose() {
+		return
+	}
 	logLn(fmt.Sprintf(format, args...))
 }
 
@@ -25,4 +29,5 @@ func init() {
 	// }
 	Debug = logF
 	Debug("Using Verbose Log")
+	Debug("testing.Verbose=%v", testing.Verbose())
 }
