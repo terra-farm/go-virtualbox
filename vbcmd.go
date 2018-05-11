@@ -5,7 +5,6 @@ import (
 	"errors"
 	"os"
 	"os/exec"
-	"os/user"
 	"runtime"
 )
 
@@ -40,26 +39,6 @@ type command struct {
 	guest   bool
 }
 
-func isSudoer() (bool, error) {
-	me, err := user.Current()
-	if err != nil {
-		return false, err
-	}
-	Debug("User: '%+v'", me)
-	if groupIDs, err := me.GroupIds(); runtime.GOOS == "linux" {
-		if err != nil {
-			return false, err
-		}
-		Debug("groupIDs: '%+v'", groupIDs)
-		for _, groupID := range groupIDs {
-			if groupID == "sudo" {
-				return true, nil
-			}
-		}
-	}
-	return false, nil
-}
-
 func (vbcmd command) setOpts(opts ...option) Command {
 	var cmd Command = &vbcmd
 	for _, opt := range opts {
@@ -72,6 +51,7 @@ func sudo(sudo bool) option {
 	return func(cmd Command) {
 		vbcmd := cmd.(*command)
 		vbcmd.sudo = sudo
+		Debug("Next sudo: %v", vbcmd.sudo)
 	}
 }
 

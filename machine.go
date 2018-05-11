@@ -93,16 +93,16 @@ func (m *Machine) Refresh() error {
 func (m *Machine) Start() error {
 	switch m.State {
 	case Paused:
-		return Manage.run("controlvm", m.Name, "resume")
+		return Manage().run("controlvm", m.Name, "resume")
 	case Poweroff, Saved, Aborted:
-		return Manage.run("startvm", m.Name, "--type", "headless")
+		return Manage().run("startvm", m.Name, "--type", "headless")
 	}
 	return nil
 }
 
 // DisconnectSerialPort sets given serial port to disconnected.
 func (m *Machine) DisconnectSerialPort(portNumber int) error {
-	return Manage.run("modifyvm", m.Name, fmt.Sprintf("--uartmode%d", portNumber), "disconnected")
+	return Manage().run("modifyvm", m.Name, fmt.Sprintf("--uartmode%d", portNumber), "disconnected")
 }
 
 // Save suspends the machine and saves its state to disk.
@@ -115,7 +115,7 @@ func (m *Machine) Save() error {
 	case Poweroff, Aborted, Saved:
 		return nil
 	}
-	return Manage.run("controlvm", m.Name, "savestate")
+	return Manage().run("controlvm", m.Name, "savestate")
 }
 
 // Pause pauses the execution of the machine.
@@ -124,7 +124,7 @@ func (m *Machine) Pause() error {
 	case Paused, Poweroff, Aborted, Saved:
 		return nil
 	}
-	return Manage.run("controlvm", m.Name, "pause")
+	return Manage().run("controlvm", m.Name, "pause")
 }
 
 // Stop gracefully stops the machine.
@@ -139,7 +139,7 @@ func (m *Machine) Stop() error {
 	}
 
 	for m.State != Poweroff { // busy wait until the machine is stopped
-		if err := Manage.run("controlvm", m.Name, "acpipowerbutton"); err != nil {
+		if err := Manage().run("controlvm", m.Name, "acpipowerbutton"); err != nil {
 			return err
 		}
 		time.Sleep(1 * time.Second)
@@ -156,7 +156,7 @@ func (m *Machine) Poweroff() error {
 	case Poweroff, Aborted, Saved:
 		return nil
 	}
-	return Manage.run("controlvm", m.Name, "poweroff")
+	return Manage().run("controlvm", m.Name, "poweroff")
 }
 
 // Restart gracefully restarts the machine.
@@ -181,7 +181,7 @@ func (m *Machine) Reset() error {
 			return err
 		}
 	}
-	return Manage.run("controlvm", m.Name, "reset")
+	return Manage().run("controlvm", m.Name, "reset")
 }
 
 // Delete deletes the machine and associated disk images.
@@ -189,12 +189,12 @@ func (m *Machine) Delete() error {
 	if err := m.Poweroff(); err != nil {
 		return err
 	}
-	return Manage.run("unregistervm", m.Name, "--delete")
+	return Manage().run("unregistervm", m.Name, "--delete")
 }
 
 // GetMachine finds a machine by its name or UUID.
 func GetMachine(id string) (*Machine, error) {
-	stdout, stderr, err := Manage.runOutErr("showvminfo", id, "--machinereadable")
+	stdout, stderr, err := Manage().runOutErr("showvminfo", id, "--machinereadable")
 	if err != nil {
 		if reMachineNotFound.FindString(stderr) != "" {
 			return nil, ErrMachineNotExist
@@ -255,7 +255,7 @@ func GetMachine(id string) (*Machine, error) {
 
 // ListMachines lists all registered machines.
 func ListMachines() ([]*Machine, error) {
-	out, err := Manage.runOut("list", "vms")
+	out, err := Manage().runOut("list", "vms")
 	if err != nil {
 		return nil, err
 	}
@@ -300,7 +300,7 @@ func CreateMachine(name, basefolder string) (*Machine, error) {
 	if basefolder != "" {
 		args = append(args, "--basefolder", basefolder)
 	}
-	if err := Manage.run(args...); err != nil {
+	if err := Manage().run(args...); err != nil {
 		return nil, err
 	}
 
@@ -349,7 +349,7 @@ func (m *Machine) Modify() error {
 		}
 		args = append(args, fmt.Sprintf("--boot%d", i+1), dev)
 	}
-	if err := Manage.run(args...); err != nil {
+	if err := Manage().run(args...); err != nil {
 		return err
 	}
 	return m.Refresh()
@@ -357,13 +357,13 @@ func (m *Machine) Modify() error {
 
 // AddNATPF adds a NAT port forarding rule to the n-th NIC with the given name.
 func (m *Machine) AddNATPF(n int, name string, rule PFRule) error {
-	return Manage.run("controlvm", m.Name, fmt.Sprintf("natpf%d", n),
+	return Manage().run("controlvm", m.Name, fmt.Sprintf("natpf%d", n),
 		fmt.Sprintf("%s,%s", name, rule.Format()))
 }
 
 // DelNATPF deletes the NAT port forwarding rule with the given name from the n-th NIC.
 func (m *Machine) DelNATPF(n int, name string) error {
-	return Manage.run("controlvm", m.Name, fmt.Sprintf("natpf%d", n), "delete", name)
+	return Manage().run("controlvm", m.Name, fmt.Sprintf("natpf%d", n), "delete", name)
 }
 
 // SetNIC set the n-th NIC.
@@ -377,7 +377,7 @@ func (m *Machine) SetNIC(n int, nic NIC) error {
 	if nic.Network == "hostonly" {
 		args = append(args, fmt.Sprintf("--hostonlyadapter%d", n), nic.HostonlyAdapter)
 	}
-	return Manage.run(args...)
+	return Manage().run(args...)
 }
 
 // AddStorageCtl adds a storage controller with the given name.
@@ -394,17 +394,17 @@ func (m *Machine) AddStorageCtl(name string, ctl StorageController) error {
 	}
 	args = append(args, "--hostiocache", bool2string(ctl.HostIOCache))
 	args = append(args, "--bootable", bool2string(ctl.Bootable))
-	return Manage.run(args...)
+	return Manage().run(args...)
 }
 
 // DelStorageCtl deletes the storage controller with the given name.
 func (m *Machine) DelStorageCtl(name string) error {
-	return Manage.run("storagectl", m.Name, "--name", name, "--remove")
+	return Manage().run("storagectl", m.Name, "--name", name, "--remove")
 }
 
 // AttachStorage attaches a storage medium to the named storage controller.
 func (m *Machine) AttachStorage(ctlName string, medium StorageMedium) error {
-	return Manage.run("storageattach", m.Name, "--storagectl", ctlName,
+	return Manage().run("storageattach", m.Name, "--storagectl", ctlName,
 		"--port", fmt.Sprintf("%d", medium.Port),
 		"--device", fmt.Sprintf("%d", medium.Device),
 		"--type", string(medium.DriveType),
@@ -415,7 +415,7 @@ func (m *Machine) AttachStorage(ctlName string, medium StorageMedium) error {
 // CloneMachine clones the given machine name into a new one.
 func CloneMachine(baseImageName string, newImageName string, register bool) error {
 	if register {
-		return Manage.run("clonevm", baseImageName, "--name", newImageName, "--register")
+		return Manage().run("clonevm", baseImageName, "--name", newImageName, "--register")
 	}
-	return Manage.run("clonevm", baseImageName, "--name", newImageName)
+	return Manage().run("clonevm", baseImageName, "--name", newImageName)
 }

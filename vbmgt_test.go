@@ -29,12 +29,12 @@ func Setup(t *testing.T) {
 	MockCtrl = gomock.NewController(t)
 	if len(VM) < 1 {
 		ManageMock = NewMockCommand(MockCtrl)
-		Manage = ManageMock
+		manage = ManageMock
 		t.Logf("Using ManageMock=%v (type=%T)", ManageMock, ManageMock)
 	} else {
 		t.Logf("Using real VM='%s'\n", VM)
 	}
-	t.Logf("Using Manage='%+v' (type: '%T')", Manage, Manage)
+	t.Logf("Using Manage='%+v' (type: '%T')", Manage(), Manage())
 }
 
 func Teardown() {
@@ -49,7 +49,7 @@ func TestVBMOut(t *testing.T) {
 			"\"go-virtualbox\" {def44546-aaaa-4902-8d15-b91c99c80cbc}"
 		ManageMock.EXPECT().runOut("list", "vms").Return(out, nil)
 	}
-	b, err := Manage.runOut("list", "vms")
+	b, err := Manage().runOut("list", "vms")
 	if err != nil {
 		t.Fatal(err)
 	}
