@@ -28,7 +28,8 @@ func init() {
 	} else if vbprog, err := lookupVBoxProgram("VBoxControl"); err == nil {
 		Manage = command{program: vbprog, sudoer: sudoer, guest: true}
 	} else {
-		panic("Did not find a VirtualBox management command")
+		// Did not find a VirtualBox management command
+		Manage = command{program: "false", sudoer: false, guest: false}
 	}
 	Debug("Manage: '%+v'", Manage)
 }
