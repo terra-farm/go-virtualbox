@@ -28,6 +28,17 @@ API doc at http://godoc.org/github.com/riobard/go-virtualbox
 | [GoDoc](http://godoc.org) | [![Go Doc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square)](http://godoc.org/github.com/asnowfix/go-virtualbox) | |
 | Release | [![Release](https://img.shields.io/github/release/asnowfix/go-virtualbox.svg?style=flat-square)](https://github.com/asnowfix/go-virtualbox/releases/latest) | |
 
+## Usage
+
+The part of the library that manages guest properties can run both from the Host and the Guest.
+
+```go
+    err := virtualbox.SetGuestProperty("MyVM", "test_key", "test_val")
+    val, err := GetGuestProperty(VM, "test_key")
+```
+
+See [GoDoc](https://godoc.org/github.com/asnowfix/go-virtualbox) for full details.
+
 ## Building
 
 First install dependencies
