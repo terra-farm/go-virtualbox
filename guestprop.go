@@ -15,7 +15,7 @@ type GuestProperty struct {
 }
 
 var (
-	getRegexp  = regexp.MustCompile("^Value: ([^,]*)$")
+	getRegexp  = regexp.MustCompile("(?m)^Value: ([^,]*)$")
 	waitRegexp = regexp.MustCompile("^Name: ([^,]*), value: ([^,]*), flags:.*$")
 )
 
