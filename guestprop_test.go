@@ -21,9 +21,7 @@ func TestGuestProperty(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if Verbose {
-		t.Logf("OK SetGuestProperty test_key=test_val")
-	}
+	Debug("OK SetGuestProperty test_key=test_val")
 
 	if ManageMock != nil {
 		ManageMock.EXPECT().isGuest().Return(false)
@@ -37,9 +35,7 @@ func TestGuestProperty(t *testing.T) {
 	if val != "test_val" {
 		t.Fatal("Wrong value")
 	}
-	if Verbose {
-		t.Logf("OK GetGuestProperty test_key=test_val")
-	}
+	Debug("OK GetGuestProperty test_key=test_val")
 
 	// Now deletes it...
 	if ManageMock != nil {
@@ -50,9 +46,7 @@ func TestGuestProperty(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if Verbose {
-		t.Logf("OK DeleteGuestProperty test_key")
-	}
+	Debug("OK DeleteGuestProperty test_key")
 
 	// ...and check that it is  no longer readable
 	if ManageMock != nil {
@@ -63,9 +57,7 @@ func TestGuestProperty(t *testing.T) {
 	if err == nil {
 		t.Fatal(fmt.Errorf("Failed deleting guestproperty"))
 	}
-	if Verbose {
-		t.Logf("OK GetGuestProperty test_key=empty")
-	}
+	Debug("OK GetGuestProperty test_key=empty")
 
 	Teardown()
 }

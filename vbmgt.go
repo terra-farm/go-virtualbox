@@ -30,6 +30,7 @@ func init() {
 	} else {
 		panic("Did not find a VirtualBox management command")
 	}
+	Debug("Manage: '%+v'", Manage)
 }
 
 func lookupVBoxProgram(vbprog string) (string, error) {

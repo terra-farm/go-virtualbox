@@ -90,9 +90,7 @@ func (vbcmd command) prepare(args []string) *exec.Cmd {
 		argv = append(argv, vbcmd.program)
 	}
 	argv = append(argv, args...)
-	if Verbose {
-		log.Printf("executing: %v %v", program, argv)
-	}
+	Debug("executing: %v %v", program, argv)
 	return exec.Command(program, argv...)
 }
 

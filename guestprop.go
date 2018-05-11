@@ -40,13 +40,9 @@ func GetGuestProperty(vm string, prop string) (string, error) {
 		return "", err
 	}
 	out = strings.TrimSpace(out)
-	if Verbose {
-		log.Printf("out (trimmed): '%s'", out)
-	}
+	Debug("out (trimmed): '%s'", out)
 	var match = getRegexp.FindStringSubmatch(out)
-	if Verbose {
-		log.Print("match:", match)
-	}
+	Debug("match:", match)
 	if len(match) != 2 {
 		return "", fmt.Errorf("No match with VBoxManage get guestproperty output")
 	}
@@ -63,9 +59,7 @@ func GetGuestProperty(vm string, prop string) (string, error) {
 func WaitGuestProperty(vm string, prop string) (string, string, error) {
 	var out string
 	var err error
-	if Verbose {
-		log.Printf("WaitGuestProperty(): wait on '%s'", prop)
-	}
+	Debug("WaitGuestProperty(): wait on '%s'", prop)
 	if Manage.isGuest() {
 		out, err = Manage.setOpts(sudo(true)).runOut("guestproperty", "wait", prop)
 	}
@@ -75,13 +69,9 @@ func WaitGuestProperty(vm string, prop string) (string, string, error) {
 		return "", "", err
 	}
 	out = strings.TrimSpace(out)
-	if Verbose {
-		log.Printf("WaitGuestProperty(): out (trimmed): '%s'", out)
-	}
+	Debug("WaitGuestProperty(): out (trimmed): '%s'", out)
 	var match = waitRegexp.FindStringSubmatch(out)
-	if Verbose {
-		log.Print("WaitGuestProperty(): match:", match)
-	}
+	Debug("WaitGuestProperty(): match:", match)
 	if len(match) != 3 {
 		return "", "", fmt.Errorf("No match with VBoxManage wait guestproperty output")
 	}
@@ -114,9 +104,7 @@ func WaitGetProperties(vm string, propPattern string) (chan GuestProperty, chan 
 		defer wg.Done()
 
 		for {
-			if Verbose {
-				log.Printf("WaitGetProperties(): waiting for: '%s' changes", propPattern)
-			}
+			Debug("WaitGetProperties(): waiting for: '%s' changes", propPattern)
 			name, value, err := WaitGuestProperty(vm, propPattern)
 			if err != nil {
 				log.Printf("WaitGetProperties(): err=%v", err)
@@ -125,13 +113,9 @@ func WaitGetProperties(vm string, propPattern string) (chan GuestProperty, chan 
 			prop := GuestProperty{name, value}
 			select {
 			case propsC <- prop:
-				if Verbose {
-					log.Printf("WaitGetProperties(): stacked: %+v", prop)
-				}
+				Debug("WaitGetProperties(): stacked: %+v", prop)
 			case done := <-doneC:
-				if Verbose {
-					log.Printf("WaitGetProperties(): done=%v", done)
-				}
+				Debug("WaitGetProperties(): done=%v", done)
 				if done {
 					return
 				}

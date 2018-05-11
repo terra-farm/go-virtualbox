@@ -25,8 +25,6 @@ func ReadTestData(file string) string {
 }
 
 func Setup(t *testing.T) {
-	Verbose = true
-
 	VM = os.Getenv("TEST_VM")
 	MockCtrl = gomock.NewController(t)
 	if len(VM) < 1 {
@@ -34,9 +32,9 @@ func Setup(t *testing.T) {
 		Manage = ManageMock
 		t.Logf("Using ManageMock=%v (type=%T)", ManageMock, ManageMock)
 	} else {
-		t.Logf("Using VBoxManage with real VM='%s'\n", VM)
+		t.Logf("Using real VM='%s'\n", VM)
 	}
-	t.Logf("Using VBoxManage='%T'", Manage)
+	t.Logf("Using Manage='%T', path='%v'", Manage, Manage.path())
 }
 
 func Teardown() {
