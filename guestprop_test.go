@@ -3,6 +3,7 @@ package virtualbox
 import (
 	"errors"
 	"fmt"
+	"sync"
 	"testing"
 	"time"
 
@@ -129,8 +130,11 @@ func TestWaitGuestProperties(t *testing.T) {
 	}
 
 	props := "test_*"
+	wg := new(sync.WaitGroup)
+	done := make(chan bool)
+
 	t.Logf("TestWaitGuestProperties(): will wait on '%s' for %d changes\n", props, left)
-	propsC, doneC, wg := WaitGetProperties(VM, props)
+	propsC := WaitGuestProperties(VM, props, done, wg)
 
 	t.Logf("TestWaitGuestProperties(): waiting on: %T(%v)\n", propsC, propsC)
 	// for prop := range propsChan {
@@ -142,7 +146,7 @@ func TestWaitGuestProperties(t *testing.T) {
 		t.Logf("TestWaitGuestProperties(): unstacked: %+v (left=%d)\n", prop, left)
 	}
 	t.Logf("TestWaitGuestProperties(): done...\n")
-	doneC <- true
+	close(done)
 	t.Logf("TestWaitGuestProperties(): done... Ok\n")
 
 	wg.Wait()

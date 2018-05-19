@@ -2,6 +2,7 @@ package virtualbox_test
 
 import (
 	"log"
+	"sync"
 	"time"
 
 	virtualbox "github.com/asnowfix/go-virtualbox"
@@ -68,17 +69,19 @@ func ExampleWaitGuestProperties() {
 		virtualbox.SetGuestProperty(VM, "test_name", "test_val1")
 	}()
 
-	props := "test_*"
-	propsC, doneC, wg := virtualbox.WaitGetProperties(VM, props)
+	wg := new(sync.WaitGroup)
+	done := make(chan bool)
+	propsPattern := "test_*"
+	props := virtualbox.WaitGuestProperties(VM, propsPattern, done, wg)
 
 	ok := true
 	left := 3
 	for ; ok && left > 0; left-- {
 		var prop virtualbox.GuestProperty
-		prop, ok = <-propsC
+		prop, ok = <-props
 		log.Println("name:", prop.Name, ", value:", prop.Value)
 	}
 
-	doneC <- true // close channel
-	wg.Wait()     // wait for gorouting
+	close(done) // close channel
+	wg.Wait()   // wait for gorouting
 }
