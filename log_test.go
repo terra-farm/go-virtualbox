@@ -24,10 +24,6 @@ func logF(format string, args ...interface{}) {
 }
 
 func init() {
-	// XXX testing.Verbose() always returns false
-	// if testing.Verbose() {
-	// 	Log = logF
-	// }
 	Debug = logF
 	Debug("Using Verbose Log")
 	Debug("testing.Verbose=%v", testing.Verbose())
