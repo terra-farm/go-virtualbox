@@ -73,7 +73,7 @@ func (vbcmd command) prepare(args []string) *exec.Cmd {
 	}
 	argv = append(argv, args...)
 	Debug("executing: %v %v", program, argv)
-	return exec.Command(program, argv...)
+	return exec.Command(program, argv...) // #nosec
 }
 
 func (vbcmd command) run(args ...string) error {
