@@ -61,8 +61,14 @@ $ dep ensure -v
 Then build:
 
 ```bash
-$ go build -v
+$ go build -v ./...
 ```
+
+Or run `make` to do it all. Available `make` sub-commands:
+
+* `build` run `go build ./...`
+* `test` run `go test ./...`
+* `lint` only run `gometalinter` linter
 
 ## Documentation
 
