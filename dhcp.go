@@ -73,7 +73,7 @@ func DHCPs() (map[string]*DHCP, error) {
 		case "NetworkMask":
 			dhcp.IPv4.Mask = ParseIPv4Mask(val)
 		case "Enabled":
-			dhcp.Enabled = (val == "Yes")
+			dhcp.Enabled = (val == stringYes)
 		}
 	}
 	if err := s.Err(); err != nil {

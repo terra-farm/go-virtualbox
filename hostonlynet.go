@@ -40,7 +40,7 @@ func CreateHostonlyNet() (*HostonlyNet, error) {
 	if err != nil {
 		return nil, err
 	}
-	res := reHostonlyInterfaceCreated.FindStringSubmatch(string(out))
+	res := reHostonlyInterfaceCreated.FindStringSubmatch(out)
 	if res == nil {
 		return nil, ErrHostonlyInterfaceCreation
 	}
@@ -51,7 +51,7 @@ func CreateHostonlyNet() (*HostonlyNet, error) {
 func (n *HostonlyNet) Config() error {
 
 	//We need a windowsfix because of https://www.virtualbox.org/ticket/8796
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == osWindows {
 		if n.IPv4.IP != nil && n.IPv4.Mask != nil {
 			cmd := exec.Command("netsh", "interface", "ip", "set", "address", fmt.Sprintf("name=\"%s\"", n.Name), "static", n.IPv4.IP.String(), net.IP(n.IPv4.Mask).String())
 			if err := cmd.Run(); err != nil {
@@ -66,7 +66,9 @@ func (n *HostonlyNet) Config() error {
 			}
 		}
 		if n.DHCP {
-			Manage().run("hostonlyif", "ipconfig", fmt.Sprintf("\"%s\"", n.Name), "--dhcp") // not implemented as of VirtualBox 4.3
+			if err := Manage().run("hostonlyif", "ipconfig", fmt.Sprintf("\"%s\"", n.Name), "--dhcp"); err != nil { // not implemented as of VirtualBox 4.3
+				return err
+			}
 		}
 
 	} else {
@@ -84,7 +86,9 @@ func (n *HostonlyNet) Config() error {
 		}
 
 		if n.DHCP {
-			Manage().run("hostonlyif", "ipconfig", n.Name, "--dhcp") // not implemented as of VirtualBox 4.3
+			if err := Manage().run("hostonlyif", "ipconfig", n.Name, "--dhcp"); err != nil { // not implemented as of VirtualBox 4.3
+				return err
+			}
 		}
 	}
 

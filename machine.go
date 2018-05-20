@@ -300,7 +300,7 @@ func CreateMachine(name, basefolder string) (*Machine, error) {
 	if basefolder != "" {
 		args = append(args, "--basefolder", basefolder)
 	}
-	if err := Manage().run(args...); err != nil {
+	if err = Manage().run(args...); err != nil {
 		return nil, err
 	}
 

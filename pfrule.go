@@ -9,8 +9,8 @@ import (
 type PFRule struct {
 	Proto     PFProto
 	HostIP    net.IP // can be nil to match any host interface
-	HostPort  uint16
 	GuestIP   net.IP // can be nil if guest IP is leased from built-in DHCP
+	HostPort  uint16
 	GuestPort uint16
 }
 

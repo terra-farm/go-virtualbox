@@ -42,7 +42,7 @@ func Manage() Command {
 
 func lookupVBoxProgram(vbprog string) (string, error) {
 
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == osWindows {
 		if p := os.Getenv("VBOX_INSTALL_PATH"); p != "" {
 			vbprog = filepath.Join(p, vbprog+".exe")
 		} else {

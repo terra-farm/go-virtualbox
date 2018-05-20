@@ -67,7 +67,7 @@ func (vbcmd command) prepare(args []string) *exec.Cmd {
 	program := vbcmd.program
 	argv := []string{}
 	Debug("Command: '%+v', runtime.GOOS: '%s'", vbcmd, runtime.GOOS)
-	if vbcmd.sudoer && vbcmd.sudo && runtime.GOOS != "windows" {
+	if vbcmd.sudoer && vbcmd.sudo && runtime.GOOS != osWindows {
 		program = "sudo"
 		argv = append(argv, vbcmd.program)
 	}

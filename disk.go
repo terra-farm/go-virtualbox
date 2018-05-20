@@ -24,7 +24,7 @@ func MakeDiskImage(dest string, size uint, r io.Reader) error {
 	if err != nil {
 		return err
 	}
-	if err := cmd.Start(); err != nil {
+	if err = cmd.Start(); err != nil {
 		return err
 	}
 

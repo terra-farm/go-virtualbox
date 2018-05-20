@@ -62,9 +62,9 @@ func NATNets() (map[string]NATNet, error) {
 			}
 			n.IPv6.Mask = ipnet.Mask
 		case "DHCP Enabled":
-			n.DHCP = (val == "Yes")
+			n.DHCP = (val == stringYes)
 		case "Enabled":
-			n.Enabled = (val == "Yes")
+			n.Enabled = (val == stringYes)
 		}
 	}
 	if err := s.Err(); err != nil {
