@@ -18,7 +18,9 @@ type PFRule struct {
 type PFProto string
 
 const (
+	// PFTCP when forwarding a TCP port.
 	PFTCP = PFProto("tcp")
+	// PFUDP when forwarding an UDP port.
 	PFUDP = PFProto("udp")
 )
 
