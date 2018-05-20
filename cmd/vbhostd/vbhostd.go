@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	openRegexp = regexp.MustCompile("^vbhostd/open$")
+	openRegexp = regexp.MustCompile("^(http|https|mailto):")
 )
 
 func main() {
@@ -78,11 +78,16 @@ func main() {
 			case "vbhostd/open":
 				fmt.Printf("opening: %v", prop.Value)
 				virtualbox.Debug("opening: %v", prop.Value)
-				args := strings.Split(prop.Value, " ")
-				cmd := open(args...)
-				err := cmd.Run()
-				if err != nil {
-					fmt.Printf("Error: %v\n", err)
+				if openRegexp.MatchString(prop.Value) {
+					args := strings.Split(prop.Value, " ")
+					cmd := open(args...)
+					err := cmd.Run()
+					if err != nil {
+						fmt.Printf("Error: %v\n", err)
+					}
+				} else {
+					fmt.Printf("Error: not a supported URL=%v", prop.Value)
+					virtualbox.Debug("Error: not a supported URL=%v", prop.Value)
 				}
 			case "vbhostd/error":
 				fmt.Printf("Error: %v", prop.Value)

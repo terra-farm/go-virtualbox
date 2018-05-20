@@ -5,7 +5,7 @@ VirtualBox Host Daemon
 
 | Commands | Description |
 |----------|-------------|
-| open     | Run `open` (macOS), `xdg_open` (Linux) or `start` (Windows XXX not implemented) with the given value, which is supposed to be an URL (XXX not verified) |
+| open     | Run `open` (macOS), `xdg_open` (Linux) or `start` (Windows XXX not implemented) with the given value, which is supposed to be an URL (starting by `http:`, `https:` or `mailto:`) |
 |          |             |
 
 Usage:
