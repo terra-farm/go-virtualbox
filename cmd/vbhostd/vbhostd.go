@@ -44,13 +44,13 @@ func main() {
 			panic(err)
 		}
 		if *verbose {
-			fmt.Printf("machines: %+v\n", machines)
+			virtualbox.Debug("machines: %+v\n", machines)
 		}
 		for _, machine := range machines {
 			vms = append(vms, machine.Name)
 		}
 		if *verbose {
-			fmt.Printf("vms: %+v\n", vms)
+			virtualbox.Debug("vms: %+v\n", vms)
 		}
 	} else {
 		vms = append(vms, *vm)
@@ -73,9 +73,10 @@ func main() {
 	for end := false; !end; {
 		select {
 		case prop := <-agg:
-			fmt.Printf("Got prop: %+v.\n", prop)
+			virtualbox.Debug("Got prop: %+v.\n", prop)
 			switch prop.Name {
 			case "vbhostd/open":
+				fmt.Printf("opening: %v", prop.Value)
 				virtualbox.Debug("opening: %v", prop.Value)
 				args := strings.Split(prop.Value, " ")
 				cmd := open(args...)
@@ -84,10 +85,11 @@ func main() {
 					fmt.Printf("Error: %v\n", err)
 				}
 			case "vbhostd/error":
+				fmt.Printf("Error: %v", prop.Value)
 				virtualbox.Debug("Error: %v", prop.Value)
-				fmt.Printf("Error: %v\n", prop.Value)
 				end = true
 			case "":
+				fmt.Printf("Unexpected error: %v", prop.Value)
 				virtualbox.Debug("Unexpected error: %v", prop.Value)
 				end = true
 			}
@@ -96,11 +98,12 @@ func main() {
 
 	for vm, d := range done {
 		if *verbose {
-			fmt.Printf("Closing WaitGuestProperties(%s)...\n", vm)
+			virtualbox.Debug("Closing WaitGuestProperties(%s)...\n", vm)
 		}
 		close(d)
 	}
-	fmt.Printf("Waiting...\n")
+	virtualbox.Debug("Waiting...\n")
 	wg.Wait()
 	fmt.Printf("Exiting....\n")
+	virtualbox.Debug("Exiting....\n")
 }

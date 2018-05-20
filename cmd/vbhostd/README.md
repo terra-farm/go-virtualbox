@@ -7,3 +7,9 @@ VirtualBox Host Daemon
 |----------|-------------|
 | open     | Run `open` (macOS), `xdg_open` (Linux) or `start` (Windows XXX not implemented) with the given value, which is supposed to be an URL (XXX not verified) |
 |          |             |
+
+Usage:
+
+- On host, start `vbhostd`
+- On host, run `VBoxManage guestproperty set go-virtualbox vbhostd/open http://www.apple.com`, to open the default browser at http://www.apple.com.
+- In Linux/macOS guest, run `sudo VBoxControl guestproperty set vbhostd/open http://www.hp.com`, to open the default browser at http://www.hp.com.
