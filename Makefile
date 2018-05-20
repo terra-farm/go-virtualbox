@@ -10,11 +10,17 @@ else
 # cron job / other
 endif
 
-default: test lint
+default: deps test lint
+
+.PHONY: deps
+deps:
+	go get -t -d -v ./...
+	go get -v github.com/golang/dep/cmd/dep
+	dep ensure -v
 
 .PHONY: test
 test:
-	go test $(PKGS)
+	go test -v ./...
 
 # go get asks for credentials when needed
 ifdef INTERACTIVE
