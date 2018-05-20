@@ -18,9 +18,9 @@ deps:
 	go get -v github.com/golang/dep/cmd/dep
 	dep ensure -v
 
-.PHONY: test
-test:
-	go test -v ./...
+.PHONY: build test
+build test:
+	go $@ -v ./...
 
 # go get asks for credentials when needed
 ifdef INTERACTIVE
