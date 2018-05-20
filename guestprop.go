@@ -78,29 +78,29 @@ func WaitGuestProperty(vm string, prop string) (string, string, error) {
 	return match[1], match[2], nil
 }
 
-// WaitGetProperties wait for changes in GuestProperties
+// WaitGuestProperties wait for changes in GuestProperties
 //
 // WaitGetProperties wait for changes in the VirtualBox GuestProperties matching
-// the given propsPattern, for the given VM.  It returns a channel of GuestProperty
-// objects (name-values pairs) populated as they change, a once-only bool channel to tell
-// the GuestPropertiesWaiter Go routine to exit and a sync.WaitGroup to synchronize
-// with the Go routine termination, if needed.
+// the given propsPattern, for the given VM.  The given bool channel indicates
+// caller-required closure.  The optional sync.WaitGroup enabke the caller program
+// to wait for Go routine completion.
 //
-// If no bool is every written in the bool channel, the Waiter Go routine never ends,
+// It returns a channel of GuestProperty objects (name-values pairs) populated
+// as they change.
+//
+// If the bool channel is never closed, the Waiter Go routine never ends,
 // but on VBoxManage error.
 //
 // Each GuestProperty change must be read from thwe channel before the waiter Go
 // routine resumes waiting for the next matching change.
 //
-func WaitGetProperties(vm string, propPattern string) (chan GuestProperty, chan bool, *sync.WaitGroup) {
+func WaitGuestProperties(vm string, propPattern string, done chan bool, wg *sync.WaitGroup) chan GuestProperty {
 
-	propsC := make(chan GuestProperty)
-	doneC := make(chan bool, 1)
-	wg := new(sync.WaitGroup)
+	props := make(chan GuestProperty)
 	wg.Add(1)
 
 	go func() {
-		defer close(propsC)
+		defer close(props)
 		defer wg.Done()
 
 		for {
@@ -112,18 +112,16 @@ func WaitGetProperties(vm string, propPattern string) (chan GuestProperty, chan 
 			}
 			prop := GuestProperty{name, value}
 			select {
-			case propsC <- prop:
+			case props <- prop:
 				Debug("WaitGetProperties(): stacked: %+v", prop)
-			case done := <-doneC:
-				Debug("WaitGetProperties(): done=%v", done)
-				if done {
-					return
-				}
+			case <-done:
+				Debug("WaitGetProperties(): done channel closed")
+				return
 			}
 		}
 	}()
 
-	return propsC, doneC, wg
+	return props
 }
 
 // DeleteGuestProperty deletes a VirtualBox guestproperty.

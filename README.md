@@ -30,6 +30,8 @@ API doc at http://godoc.org/github.com/riobard/go-virtualbox
 
 ## Usage
 
+### Library
+
 The part of the library that manages guest properties can run both from the Host and the Guest.
 
 ```go
@@ -38,6 +40,14 @@ The part of the library that manages guest properties can run both from the Host
 ```
 
 See [GoDoc](https://godoc.org/github.com/asnowfix/go-virtualbox) for full details.
+
+### Commands
+
+The [vbhostd](./cmd/vbhostd/README.md) commands waits on the `vbhostd/*` guest-properties pattern.
+
+- When the guest writes a value on the `vbhostd/open`, it causes the host to open the given location:
+    - Write `http://www.hp.com` will open the default browser as the given URL 
+    - Write `mailto:foo@bar.com?Cc=bar@foo.com` opens the default mailer pre-filling the recipient and carbon-copy recipient fields
 
 ## Building
 
