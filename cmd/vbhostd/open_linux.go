@@ -5,5 +5,5 @@ import (
 )
 
 func open(args ...string) *exec.Cmd {
-	return exec.Command("xdg_open", args...)
+	return exec.Command("xdg_open", args...) // #nosec
 }
