@@ -9,12 +9,17 @@ API doc at http://godoc.org/github.com/riobard/go-virtualbox
 
 <!-- TOC depthFrom:2 depthTo:4 -->
 
-- [Status](#status)
-- [Building](#building)
-- [Testing](#testing)
-    - [Preparation](#preparation)
-    - [Run tests](#run-tests)
-    - [Re-generate mock](#re-generate-mock)
+1. [Status](#status)
+2. [Usage](#usage)
+    1. [Library](#library)
+    2. [Commands](#commands)
+    3. [Documentation](#documentation)
+3. [Building](#building)
+4. [Testing](#testing)
+    1. [Preparation](#preparation)
+    2. [Run tests](#run-tests)
+    3. [Re-generate mock](#re-generate-mock)
+5. [Caveats](#caveats)
 
 <!-- /TOC -->
 
@@ -49,30 +54,35 @@ The [vbhostd](./cmd/vbhostd/README.md) commands waits on the `vbhostd/*` guest-p
     - Write `http://www.hp.com` will open the default browser as the given URL 
     - Write `mailto:foo@bar.com?Cc=bar@foo.com` opens the default mailer pre-filling the recipient and carbon-copy recipient fields
 
+### Documentation
+
+For the released version, see [GoDoc:asnowfix/go-virtualbox](https://godoc.org/github.com/asnowfix/go-virtualbox). To see the local documentation, run `godoc -http=:6060 &` and then `open http://localhost:6060/pkg/github.com/asnowfix/go-virtualbox/`.
+
 ## Building
 
 First install dependencies
+
+- [GoLang](https://golang.org/doc/install#install)
+- [GNU Make](https://www.gnu.org/software/make/)] (Windows: via `choco install -y gnuwin32-make.portable)
+
+Get Go dependencies: `make deps` or:
 
 ```bash
 $ go get -v github.com/golang/dep/cmd/dep
 $ dep ensure -v
 ```
 
-Then build:
+Then build: `make build` or:
 
 ```bash
 $ go build -v ./...
 ```
 
-Or run `make` to do it all. Available `make` sub-commands:
-
+* `default` run everyhing in order
+* `deps` install dependencies (`dep` and others)
 * `build` run `go build ./...`
 * `test` run `go test ./...`
 * `lint` only run `gometalinter` linter
-
-## Documentation
-
-Run `godoc -http=:6060 &` and then `open http://localhost:6060/pkg/github.com/asnowfix/go-virtualbox/`.
 
 ## Testing 
 
