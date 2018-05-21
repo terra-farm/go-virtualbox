@@ -154,3 +154,42 @@ func TestWaitGuestProperties(t *testing.T) {
 
 	Teardown()
 }
+
+func TestWaitGuestPropertiesQuit(t *testing.T) {
+	Setup(t)
+
+	keyE, val1E := "test_key", "test_val1"
+
+	if ManageMock != nil {
+		waitGuestProperty1Out := ReadTestData("vboxmanage-guestproperty-wait-1.out")
+		gomock.InOrder(
+			ManageMock.EXPECT().isGuest().Return(false),
+			ManageMock.EXPECT().runOut("guestproperty", "wait", VM, "test_*").Return(waitGuestProperty1Out, nil).Times(1),
+		)
+	} else {
+		go func() {
+			second := time.Second
+
+			time.Sleep(1 * second)
+			t.Logf(">>> key='%s', val='%s'", keyE, val1E)
+			SetGuestProperty(VM, keyE, val1E)
+		}()
+	}
+
+	props := "test_*"
+	wg := new(sync.WaitGroup)
+	done := make(chan bool)
+
+	t.Logf("TestWaitGuestProperties(): will wait on '%s'\n", props)
+	propsC := WaitGuestProperties(VM, props, done, wg)
+	t.Logf("TestWaitGuestProperties(): waiting on: %T(%v)\n", propsC, propsC)
+
+	t.Logf("TestWaitGuestProperties(): done...\n")
+	close(done)
+	t.Logf("TestWaitGuestProperties(): done... Ok\n")
+
+	wg.Wait()
+	t.Logf("TestWaitGuestProperties(): exiting\n")
+
+	Teardown()
+}

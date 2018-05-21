@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/asnowfix/go-virtualbox"
 )
@@ -70,8 +71,24 @@ func main() {
 		}(props)
 	}
 
-	for end := false; !end; {
+	end := false
+	q := make(chan struct{})
+	quit := func() {
+		for vm, d := range done {
+			virtualbox.Debug("Closing WaitGuestProperties(%s)...\n", vm)
+			close(d)
+			virtualbox.Debug("Closing WaitGuestProperties(%s)... Ok\n", vm)
+		}
+		close(q)
+	}
+
+	for !end {
+	end:
 		select {
+		case <-q:
+			end = true
+			virtualbox.Debug("Quitting...\n", vm)
+			break end
 		case prop := <-agg:
 			virtualbox.Debug("Got prop: %+v.\n", prop)
 			switch prop.Name {
@@ -92,23 +109,29 @@ func main() {
 			case "vbhostd/error":
 				fmt.Printf("Error: %v", prop.Value)
 				virtualbox.Debug("Error: %v", prop.Value)
-				end = true
+				quit()
 			case "":
 				fmt.Printf("Unexpected error: %v", prop.Value)
 				virtualbox.Debug("Unexpected error: %v", prop.Value)
-				end = true
+				quit()
 			}
 		}
 	}
 
-	for vm, d := range done {
-		if *verbose {
-			virtualbox.Debug("Closing WaitGuestProperties(%s)...\n", vm)
-		}
-		close(d)
+	virtualbox.Debug("Waiting completion or timeout...\n")
+	wait := make(chan struct{})
+	go func() {
+		wg.Wait()
+		close(wait)
+	}()
+
+	select {
+	case <-wait:
+		virtualbox.Debug("Every WaitGuestProperties() have completed.\n")
+	case <-time.After(2000 * time.Millisecond):
+		virtualbox.Debug("Timeout.\n")
 	}
-	virtualbox.Debug("Waiting...\n")
-	wg.Wait()
+
 	fmt.Printf("Exiting....\n")
 	virtualbox.Debug("Exiting....\n")
 }
