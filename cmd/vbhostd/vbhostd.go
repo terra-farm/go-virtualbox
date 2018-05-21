@@ -76,7 +76,7 @@ func main() {
 			virtualbox.Debug("Got prop: %+v.\n", prop)
 			switch prop.Name {
 			case "vbhostd/open":
-				fmt.Printf("opening: %v", prop.Value)
+				fmt.Printf("opening: %v\n", prop.Value)
 				virtualbox.Debug("opening: %v", prop.Value)
 				if openRegexp.MatchString(prop.Value) {
 					args := strings.Split(prop.Value, " ")
@@ -86,15 +86,15 @@ func main() {
 						fmt.Printf("Error: %v\n", err)
 					}
 				} else {
-					fmt.Printf("Error: not a supported URL=%v", prop.Value)
+					fmt.Printf("Error: not a supported URL=%v\n", prop.Value)
 					virtualbox.Debug("Error: not a supported URL=%v", prop.Value)
 				}
 			case "vbhostd/error":
-				fmt.Printf("Error: %v", prop.Value)
+				fmt.Printf("Error: %v\n", prop.Value)
 				virtualbox.Debug("Error: %v", prop.Value)
 				return
 			case "":
-				fmt.Printf("Unexpected error: %v", prop.Value)
+				fmt.Printf("Unexpected error: %v\n", prop.Value)
 				virtualbox.Debug("Unexpected error: %v", prop.Value)
 				return
 			}
