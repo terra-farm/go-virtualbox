@@ -71,25 +71,8 @@ func main() {
 		}(props)
 	}
 
-	end := false
-	q := make(chan struct{})
-	quit := func() {
-		for vm, d := range done {
-			virtualbox.Debug("Closing WaitGuestProperties(%s)...\n", vm)
-			close(d)
-			virtualbox.Debug("Closing WaitGuestProperties(%s)... Ok\n", vm)
-		}
-		close(q)
-	}
-
-	for !end {
-	end:
-		select {
-		case <-q:
-			end = true
-			virtualbox.Debug("Quitting...\n", vm)
-			break end
-		case prop := <-agg:
+	func() {
+		for prop := range agg {
 			virtualbox.Debug("Got prop: %+v.\n", prop)
 			switch prop.Name {
 			case "vbhostd/open":
@@ -109,13 +92,19 @@ func main() {
 			case "vbhostd/error":
 				fmt.Printf("Error: %v", prop.Value)
 				virtualbox.Debug("Error: %v", prop.Value)
-				quit()
+				return
 			case "":
 				fmt.Printf("Unexpected error: %v", prop.Value)
 				virtualbox.Debug("Unexpected error: %v", prop.Value)
-				quit()
+				return
 			}
 		}
+	}()
+
+	for vm, d := range done {
+		virtualbox.Debug("Closing WaitGuestProperties(%s)...\n", vm)
+		close(d)
+		virtualbox.Debug("Closing WaitGuestProperties(%s)... Ok\n", vm)
 	}
 
 	virtualbox.Debug("Waiting completion or timeout...\n")
