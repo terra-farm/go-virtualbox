@@ -1,4 +1,4 @@
-## Setup -- do not modify
+## Setup -- cross-OS
 
 ME := $(shell id -un)
 $(info ME=$(ME))
@@ -36,6 +36,8 @@ $(info PKGS=$(PKGS))
 
 default: deps test lint build-pkgs
 
+## Dependencies --
+
 DEP_NAME := dep
 DEP := $(GOPATH)/bin/$(DEP_NAME)$(EXE)
 
@@ -51,13 +53,16 @@ endif
 $(DEP):
 	go get -v github.com/golang/dep/cmd/dep
 
+## Build, build tests & run them --
+
 .PHONY: build test
 build test:
 	go $(@) -v ./...
 
+## build-pkgs -- generate binaries
+
 .PHONY: build-pkgs
 build-pkgs: $(foreach pkg,$(PKGS),build-pkg-$(basename $(pkg)))
-#	go build -v ./cmd/vbhostd
 
 define build-pkg
 build-pkg-$(basename $(1)):
@@ -66,11 +71,13 @@ endef
 
 $(foreach pkg,$(PKGS),$(eval $(call build-pkg,$(pkg))))
 
-# go get asks for credentials when needed
+# `go get` asks for credentials when needed
 ifdef INTERACTIVE
 GIT_TERMINAL_PROMPT := 1
 export GIT_TERMINAL_PROMPT
 endif
+
+## Linting & scanning --
 
 #GOMETALINTER_NAME := gometalinter.v2
 GOMETALINTER_NAME := gometalinter
@@ -88,6 +95,8 @@ endif
 .PHONY: lint
 lint: $(GOMETALINTER)
 	$(GOMETALINTER) ./... --vendor
+
+## Release -- FIXME not yet ready
 
 BINARY := mytool
 
