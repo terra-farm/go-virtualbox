@@ -8,6 +8,9 @@ ARCH="amd64"
 # Home of the vagrant user, not the root which calls this script
 HOMEPATH="/home/vagrant"
 
+# Avoid Ubuntu builtin DKMS -- https://www.virtualbox.org/ticket/17189
+echo "blacklist vboxvideo" >> /etc/modprobe.d/blacklist.conf
+
 # Updating and installing stuff
 sudo apt-get update
 sudo apt-get install -y git curl
