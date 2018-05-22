@@ -1,5 +1,7 @@
 ## Setup -- do not modify
 
+ME := $(shell id -un)
+$(info ME=$(ME))
 INTERACTIVE:=$(shell [ -t 0 ] && echo 1)
 $(info INTERACTIVE=$(INTERACTIVE))
 ifdef INTERACTIVE
@@ -22,7 +24,14 @@ endif
 
 ## Package -- 
 
+ifeq ($(ME),vagrant)
+# FIXME: any better way?
+ROOTPKG := github.com/asnowfix/go-virtualbox
+PKGS := $(filter-out /vendor%,$(shell cd $(GOPATH)/src/$(ROOTPKG) && go list ./...))
+else
+ROOTPKG := $(shell go list .)
 PKGS := $(filter-out /vendor%,$(shell go list ./...))
+endif
 $(info PKGS=$(PKGS))
 
 default: deps test lint build-pkgs
@@ -33,7 +42,11 @@ DEP := $(GOPATH)/bin/$(DEP_NAME)$(EXE)
 .PHONY: deps
 deps: $(DEP)
 	go get -t -d -v ./...
+ifeq ($(ME),vagrant)
+	cd $(GOPATH)/src/$(ROOTPKG) && $(DEP) ensure -v
+else
 	$(DEP) ensure -v
+endif
 
 $(DEP):
 	go get -v github.com/golang/dep/cmd/dep
