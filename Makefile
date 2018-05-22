@@ -1,5 +1,4 @@
-PKGS := $(filter-out /vendor%,$(shell go list ./...))
-$(info PKGS=$(PKGS))
+## Setup -- do not modify
 
 INTERACTIVE:=$(shell [ -t 0 ] && echo 1)
 $(info INTERACTIVE=$(INTERACTIVE))
@@ -12,6 +11,19 @@ endif
 ifeq ($(OS),Windows_NT)
 EXE := .exe
 endif
+
+ifeq ($(GOROOT),)
+$(error GOROOT undefined)
+endif
+
+ifeq ($(GOPATH),)
+$(error GOPATH undefined)
+endif
+
+## Package -- 
+
+PKGS := $(filter-out /vendor%,$(shell go list ./...))
+$(info PKGS=$(PKGS))
 
 default: deps test lint build-pkgs
 
