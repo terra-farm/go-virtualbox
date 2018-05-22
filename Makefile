@@ -14,10 +14,6 @@ ifeq ($(OS),Windows_NT)
 EXE := .exe
 endif
 
-ifeq ($(GOROOT),)
-$(error GOROOT undefined)
-endif
-
 ifeq ($(GOPATH),)
 $(error GOPATH undefined)
 endif
