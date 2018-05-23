@@ -1,4 +1,3 @@
 /.vagrant
 /vendor
 /godoc*
-cmd/vbhostd/vbhostd

@@ -13,7 +13,7 @@ ifeq ($(OS),Windows_NT)
 EXE := .exe
 endif
 
-default: deps test lint
+default: deps test lint build-pkgs
 
 DEP_NAME := dep
 DEP := $(GOPATH)/bin/$(DEP_NAME)$(EXE)
@@ -29,6 +29,17 @@ $(DEP):
 .PHONY: build test
 build test:
 	go $(@) -v ./...
+
+.PHONY: build-pkgs
+build-pkgs: $(foreach pkg,$(PKGS),build-pkg-$(basename $(pkg)))
+#	go build -v ./cmd/vbhostd
+
+define build-pkg
+build-pkg-$(basename $(1)):
+	go build -v $(1)
+endef
+
+$(foreach pkg,$(PKGS),$(eval $(call build-pkg,$(pkg))))
 
 # go get asks for credentials when needed
 ifdef INTERACTIVE
@@ -63,8 +74,7 @@ os = $(word 1, $@)
 
 .PHONY: $(PLATFORMS)
 $(PLATFORMS):
-	mkdir -p release
 	GOOS=$(os) GOARCH=amd64 go build -o release/$(BINARY)-$(VERSION)-$(os)-amd64
 
 .PHONY: release
-release: windows linux darwin
+release: $(PLATFORMS)
