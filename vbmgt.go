@@ -26,7 +26,10 @@ func Manage() Command {
 		return manage
 	}
 
-	sudoer, _ := isSudoer()
+	sudoer, err := isSudoer()
+	if err != nil {
+		Debug("Error getting sudoer status: '%v'", err)
+	}
 
 	if vbprog, err := lookupVBoxProgram("VBoxManage"); err == nil {
 		manage = command{program: vbprog, sudoer: sudoer, guest: false}
@@ -42,7 +45,7 @@ func Manage() Command {
 
 func lookupVBoxProgram(vbprog string) (string, error) {
 
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == osWindows {
 		if p := os.Getenv("VBOX_INSTALL_PATH"); p != "" {
 			vbprog = filepath.Join(p, vbprog+".exe")
 		} else {

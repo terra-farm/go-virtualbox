@@ -8,12 +8,13 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/asnowfix/go-virtualbox"
 )
 
 var (
-	openRegexp = regexp.MustCompile("^vbhostd/open$")
+	openRegexp = regexp.MustCompile("^(http|https|mailto):")
 )
 
 func main() {
@@ -70,40 +71,56 @@ func main() {
 		}(props)
 	}
 
-	for end := false; !end; {
-		select {
-		case prop := <-agg:
+	func() {
+		for prop := range agg {
 			virtualbox.Debug("Got prop: %+v.\n", prop)
 			switch prop.Name {
 			case "vbhostd/open":
-				fmt.Printf("opening: %v", prop.Value)
+				fmt.Printf("opening: %v\n", prop.Value)
 				virtualbox.Debug("opening: %v", prop.Value)
-				args := strings.Split(prop.Value, " ")
-				cmd := open(args...)
-				err := cmd.Run()
-				if err != nil {
-					fmt.Printf("Error: %v\n", err)
+				if openRegexp.MatchString(prop.Value) {
+					args := strings.Split(prop.Value, " ")
+					cmd := open(args...)
+					err := cmd.Run()
+					if err != nil {
+						fmt.Printf("Error: %v\n", err)
+					}
+				} else {
+					fmt.Printf("Error: not a supported URL=%v\n", prop.Value)
+					virtualbox.Debug("Error: not a supported URL=%v", prop.Value)
 				}
 			case "vbhostd/error":
-				fmt.Printf("Error: %v", prop.Value)
+				fmt.Printf("Error: %v\n", prop.Value)
 				virtualbox.Debug("Error: %v", prop.Value)
-				end = true
+				return
 			case "":
-				fmt.Printf("Unexpected error: %v", prop.Value)
+				fmt.Printf("Unexpected error: %v\n", prop.Value)
 				virtualbox.Debug("Unexpected error: %v", prop.Value)
-				end = true
+				return
 			}
 		}
-	}
+	}()
 
 	for vm, d := range done {
-		if *verbose {
-			virtualbox.Debug("Closing WaitGuestProperties(%s)...\n", vm)
-		}
+		virtualbox.Debug("Closing WaitGuestProperties(%s)...\n", vm)
 		close(d)
+		virtualbox.Debug("Closing WaitGuestProperties(%s)... Ok\n", vm)
 	}
-	virtualbox.Debug("Waiting...\n")
-	wg.Wait()
+
+	virtualbox.Debug("Waiting completion or timeout...\n")
+	wait := make(chan struct{})
+	go func() {
+		wg.Wait()
+		close(wait)
+	}()
+
+	select {
+	case <-wait:
+		virtualbox.Debug("Every WaitGuestProperties() have completed.\n")
+	case <-time.After(2000 * time.Millisecond):
+		virtualbox.Debug("Timeout.\n")
+	}
+
 	fmt.Printf("Exiting....\n")
 	virtualbox.Debug("Exiting....\n")
 }

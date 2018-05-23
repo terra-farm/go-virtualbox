@@ -61,7 +61,10 @@ func WaitGuestProperty(vm string, prop string) (string, string, error) {
 	var err error
 	Debug("WaitGuestProperty(): wait on '%s'", prop)
 	if Manage().isGuest() {
-		out, err = Manage().setOpts(sudo(true)).runOut("guestproperty", "wait", prop)
+		_, err = Manage().setOpts(sudo(true)).runOut("guestproperty", "wait", prop)
+		if err != nil {
+			return "", "", err
+		}
 	}
 	out, err = Manage().runOut("guestproperty", "wait", vm, prop)
 	if err != nil {

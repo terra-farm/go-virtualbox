@@ -8,6 +8,9 @@ ARCH="amd64"
 # Home of the vagrant user, not the root which calls this script
 HOMEPATH="/home/vagrant"
 
+# Avoid Ubuntu builtin DKMS -- https://www.virtualbox.org/ticket/17189
+echo "blacklist vboxvideo" >> /etc/modprobe.d/blacklist.conf
+
 # Updating and installing stuff
 sudo apt-get update
 sudo apt-get install -y git curl
@@ -34,11 +37,16 @@ tar -C "$HOMEPATH" -xzf "$HOMEPATH/go.tar.gz" || rm -f "$HOMEPATH/go.tar.gz"
 mv "$HOMEPATH/go" "$HOMEPATH/.go"
 #rm "$HOMEPATH/go.tar.gz"
 
-# Create go folder structure
-GP="/vagrant/GO"
-mkdir -p "$GP/src"
-mkdir -p "$GP/pkg"
-mkdir -p "$GP/bin"
+# Creating go folder structure
+echo "Creating go folder structure ..."
+GP="$HOMEPATH/GO"
+for dir in src pkg bin; do
+    mkdir -p "$GP/$dir"
+done
+chown -R vagrant:vagrant "$GP"
+
+# Creating ~/.bashrc
+echo "Creating ~/.bashrc ..."
 
 cat > $HOMEPATH/.bashrc << EOF
 # Golang environments
