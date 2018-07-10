@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -29,7 +30,7 @@ const (
 	F_cpuhotplug
 	F_pae
 	F_longmode
-	F_synthcpu
+	//F_synthcpu
 	F_hpet
 	F_hwvirtex
 	F_triplefaultreset
@@ -66,6 +67,14 @@ type Machine struct {
 	OSType     string
 	Flag       Flag
 	BootOrder  []string // max 4 slots, each in {none|floppy|dvd|disk|net}
+	NICs       []NIC
+}
+
+func New() *Machine {
+	return &Machine{
+		BootOrder: make([]string, 0, 4),
+		NICs:      make([]NIC, 0, 4),
+	}
 }
 
 // Refresh reloads the machine information.
@@ -180,17 +189,28 @@ func (m *Machine) Delete() error {
 	return vbm("unregistervm", m.Name, "--delete")
 }
 
+var mutex sync.Mutex
+
 // GetMachine finds a machine by its name or UUID.
 func GetMachine(id string) (*Machine, error) {
+	/* There is a strage behavior where running multiple instances of
+	'VBoxManage showvminfo' on same VM simultaneously can return an error of
+	'object is not ready (E_ACCESSDENIED)', so we sequential the operation with a mutex.
+	Note if you are running multiple process of go-virtualbox or 'showvminfo'
+	in the command line side by side, this not gonna work. */
+	mutex.Lock()
 	stdout, stderr, err := vbmOutErr("showvminfo", id, "--machinereadable")
+	mutex.Unlock()
 	if err != nil {
 		if reMachineNotFound.FindString(stderr) != "" {
 			return nil, ErrMachineNotExist
 		}
 		return nil, err
 	}
+
+	/* Read all VM info into a map */
+	propMap := make(map[string]string)
 	s := bufio.NewScanner(strings.NewReader(stdout))
-	m := &Machine{}
 	for s.Scan() {
 		res := reVMInfoLine.FindStringSubmatch(s.Text())
 		if res == nil {
@@ -204,37 +224,56 @@ func GetMachine(id string) (*Machine, error) {
 		if val == "" {
 			val = res[4]
 		}
-
-		switch key {
-		case "name":
-			m.Name = val
-		case "UUID":
-			m.UUID = val
-		case "VMState":
-			m.State = MachineState(val)
-		case "memory":
-			n, err := strconv.ParseUint(val, 10, 32)
-			if err != nil {
-				return nil, err
-			}
-			m.Memory = uint(n)
-		case "cpus":
-			n, err := strconv.ParseUint(val, 10, 32)
-			if err != nil {
-				return nil, err
-			}
-			m.CPUs = uint(n)
-		case "vram":
-			n, err := strconv.ParseUint(val, 10, 32)
-			if err != nil {
-				return nil, err
-			}
-			m.VRAM = uint(n)
-		case "CfgFile":
-			m.CfgFile = val
-			m.BaseFolder = filepath.Dir(val)
-		}
+		propMap[key] = val
 	}
+
+	/* Extract basic info */
+	m := New()
+	m.Name = propMap["name"]
+	m.UUID = propMap["UUID"]
+	m.State = MachineState(propMap["VMState"])
+	n, err := strconv.ParseUint(propMap["memory"], 10, 32)
+	if err != nil {
+		return nil, err
+	}
+	m.Memory = uint(n)
+	n, err = strconv.ParseUint(propMap["cpus"], 10, 32)
+	if err != nil {
+		return nil, err
+	}
+	m.CPUs = uint(n)
+	n, err = strconv.ParseUint(propMap["vram"], 10, 32)
+	if err != nil {
+		return nil, err
+	}
+	m.VRAM = uint(n)
+	m.CfgFile = propMap["CfgFile"]
+	m.BaseFolder = filepath.Dir(m.CfgFile)
+
+	/* Extract NIC info */
+	for i := 1; i <= 4; i++ {
+		var nic NIC
+		nicType, ok := propMap[fmt.Sprintf("nic%d", i)]
+		if !ok || nicType == "none" {
+			break
+		}
+		nic.Network = NICNetwork(nicType)
+		nic.Hardware = NICHardware(propMap[fmt.Sprintf("nictype%d", i)])
+		if nic.Hardware == "" {
+			return nil, fmt.Errorf("Could not find corresponding 'nictype%d'", i)
+		}
+		nic.MacAddr = propMap[fmt.Sprintf("macaddress%d", i)]
+		if nic.MacAddr == "" {
+			return nil, fmt.Errorf("Could not find corresponding 'macaddress%d'", i)
+		}
+		if nic.Network == NICNetHostonly {
+			nic.HostInterface = propMap[fmt.Sprintf("hostonlyadapter%d", i)]
+		} else if nic.Network == NICNetBridged {
+			nic.HostInterface = propMap[fmt.Sprintf("bridgeadapter%d", i)]
+		}
+		m.NICs = append(m.NICs, nic)
+	}
+
 	if err := s.Err(); err != nil {
 		return nil, err
 	}
@@ -256,7 +295,12 @@ func ListMachines() ([]*Machine, error) {
 		}
 		m, err := GetMachine(res[1])
 		if err != nil {
-			return nil, err
+			// Sometimes a VM is listed but not available, so we need to handle this.
+			if err == ErrMachineNotExist {
+				continue
+			} else {
+				return nil, err
+			}
 		}
 		ms = append(ms, m)
 	}
@@ -320,7 +364,7 @@ func (m *Machine) Modify() error {
 		"--cpuhotplug", m.Flag.Get(F_cpuhotplug),
 		"--pae", m.Flag.Get(F_pae),
 		"--longmode", m.Flag.Get(F_longmode),
-		"--synthcpu", m.Flag.Get(F_synthcpu),
+		//"--synthcpu", m.Flag.Get(F_synthcpu),
 		"--hpet", m.Flag.Get(F_hpet),
 		"--hwvirtex", m.Flag.Get(F_hwvirtex),
 		"--triplefaultreset", m.Flag.Get(F_triplefaultreset),
@@ -337,6 +381,20 @@ func (m *Machine) Modify() error {
 		}
 		args = append(args, fmt.Sprintf("--boot%d", i+1), dev)
 	}
+
+	for i, nic := range m.NICs {
+		n := i + 1
+		args = append(args,
+			fmt.Sprintf("--nic%d", n), string(nic.Network),
+			fmt.Sprintf("--nictype%d", n), string(nic.Hardware),
+			fmt.Sprintf("--cableconnected%d", n), "on")
+		if nic.Network == NICNetHostonly {
+			args = append(args, fmt.Sprintf("--hostonlyadapter%d", n), nic.HostInterface)
+		} else if nic.Network == NICNetBridged {
+			args = append(args, fmt.Sprintf("--bridgeadapter%d", n), nic.HostInterface)
+		}
+	}
+
 	if err := vbm(args...); err != nil {
 		return err
 	}
@@ -362,8 +420,10 @@ func (m *Machine) SetNIC(n int, nic NIC) error {
 		fmt.Sprintf("--cableconnected%d", n), "on",
 	}
 
-	if nic.Network == "hostonly" {
-		args = append(args, fmt.Sprintf("--hostonlyadapter%d", n), nic.HostonlyAdapter)
+	if nic.Network == NICNetHostonly {
+		args = append(args, fmt.Sprintf("--hostonlyadapter%d", n), nic.HostInterface)
+	} else if nic.Network == NICNetBridged {
+		args = append(args, fmt.Sprintf("--bridgeadapter%d", n), nic.HostInterface)
 	}
 	return vbm(args...)
 }
@@ -398,4 +458,50 @@ func (m *Machine) AttachStorage(ctlName string, medium StorageMedium) error {
 		"--type", string(medium.DriveType),
 		"--medium", medium.Medium,
 	)
+}
+
+// GetGuestProperty get guest property from the VM, mose of these properties
+//	need VirtualBox Guest Addition be installed on the guest.
+// Use 'VBoxManage guestproperty enumerate' to list all available properties.
+func (m *Machine) GetGuestProperty(key string) (*string, error) {
+	value, err := vbmOut("guestproperty", "get", m.Name, key)
+	if err != nil {
+		return nil, err
+	}
+	value = strings.TrimSpace(value)
+	/* 'guestproperty get' returns 0 even when the key is not found,
+	so we need to check stdout for this case */
+	if strings.HasPrefix(value, "No value set") {
+		return nil, nil
+	} else {
+		trimmed := strings.TrimPrefix(value, "Value: ")
+		return &trimmed, nil
+	}
+}
+
+// SetExtraData attaches custom string to the VM.
+func (m *Machine) SetExtraData(key, val string) error {
+	return vbm("setextradata", m.Name, key, val)
+}
+
+// SetExtraData retrieves custom string from the VM.
+func (m *Machine) GetExtraData(key string) (*string, error) {
+	value, err := vbmOut("getextradata", m.Name, key)
+	if err != nil {
+		return nil, err
+	}
+	value = strings.TrimSpace(value)
+	/* 'getextradata get' returns 0 even when the key is not found,
+	so we need to check stdout for this case */
+	if strings.HasPrefix(value, "No value set") {
+		return nil, nil
+	} else {
+		trimmed := strings.TrimPrefix(value, "Value: ")
+		return &trimmed, nil
+	}
+}
+
+// SetExtraData removes custom string from the VM.
+func (m *Machine) DeleteExtraData(key string) error {
+	return vbm("setextradata", m.Name, key)
 }
