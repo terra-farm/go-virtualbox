@@ -28,7 +28,7 @@
     ["deadcode", "github.com/tsenart/deadcode"],
     ["dupl", "github.com/mibk/dupl"],
     ["errcheck", "github.com/kisielk/errcheck"],
-    ["gas", "github.com/GoASTScanner/gas"],
+    ["gosec", "github.com/securego/gosec"],
     ["goconst", "github.com/jgautheron/goconst/cmd/goconst"],
     ["gocyclo", "github.com/alecthomas/gocyclo"],
     ["gofmt"],
