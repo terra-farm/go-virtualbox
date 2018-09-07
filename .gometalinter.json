@@ -2,7 +2,7 @@
   "Enable": [
     "deadcode",
     "errcheck",
-    "gas",
+    "gosec",
     "goconst",
     "gofmt",
     "golint",
