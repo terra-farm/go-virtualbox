@@ -250,14 +250,14 @@ func GetMachine(id string) (*Machine, error) {
 	m.CfgFile = propMap["CfgFile"]
 	m.BaseFolder = filepath.Dir(m.CfgFile)
 
-  /* Extract BootOrder */
-  for i := 1; i <= 4; i++ {
-    boot, ok := propMap[fmt.Sprintf("boot%d", i)]
-    if !ok || boot == "none" {
-      break
-    }
-    m.BootOrder = append(m.BootOrder, boot)
-  }
+	/* Extract BootOrder */
+	for i := 1; i <= 4; i++ {
+		boot, ok := propMap[fmt.Sprintf("boot%d", i)]
+		if !ok || boot == "none" {
+			break
+		}
+		m.BootOrder = append(m.BootOrder, boot)
+	}
 
 	/* Extract NIC info */
 	for i := 1; i <= 4; i++ {
