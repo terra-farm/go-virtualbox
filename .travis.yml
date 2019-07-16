@@ -1,6 +1,11 @@
 language: go
 
-go: 1.9.1
+go:
+- "1.12.4"
+
+os:
+  - linux
+  - osx
 
 install:
 - go get github.com/mitchellh/gox
