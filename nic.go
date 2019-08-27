@@ -15,6 +15,7 @@ const (
 	NICNetAbsent       = NICNetwork("none")
 	NICNetDisconnected = NICNetwork("null")
 	NICNetNAT          = NICNetwork("nat")
+	NICNetNATNetwork   = NICNetwork("nat-network")
 	NICNetBridged      = NICNetwork("bridged")
 	NICNetInternal     = NICNetwork("intnet")
 	NICNetHostonly     = NICNetwork("hostonly")
