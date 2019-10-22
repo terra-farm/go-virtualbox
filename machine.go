@@ -283,6 +283,8 @@ func GetMachine(id string) (*Machine, error) {
 			nic.HostInterface = propMap[fmt.Sprintf("hostonlyadapter%d", i)]
 		} else if nic.Network == NICNetBridged {
 			nic.HostInterface = propMap[fmt.Sprintf("bridgeadapter%d", i)]
+		} else if nic.Network == NICNetNATNetwork {
+			nic.NatNetwork = propMap[fmt.Sprintf("nat-network%d", i)]
 		}
 		m.NICs = append(m.NICs, nic)
 	}
@@ -405,6 +407,8 @@ func (m *Machine) Modify() error {
 			args = append(args, fmt.Sprintf("--hostonlyadapter%d", n), nic.HostInterface)
 		} else if nic.Network == NICNetBridged {
 			args = append(args, fmt.Sprintf("--bridgeadapter%d", n), nic.HostInterface)
+		} else if nic.Network == NICNetNATNetwork {
+			args = append(args, fmt.Sprintf("--nat-network%d", n), nic.NatNetwork)
 		}
 	}
 
@@ -437,6 +441,8 @@ func (m *Machine) SetNIC(n int, nic NIC) error {
 		args = append(args, fmt.Sprintf("--hostonlyadapter%d", n), nic.HostInterface)
 	} else if nic.Network == NICNetBridged {
 		args = append(args, fmt.Sprintf("--bridgeadapter%d", n), nic.HostInterface)
+	} else if nic.Network == NICNetNATNetwork {
+			args = append(args, fmt.Sprintf("--nat-network%d", n), nic.NatNetwork)
 	}
 	return Manage().run(args...)
 }
