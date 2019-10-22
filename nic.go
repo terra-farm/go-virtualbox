@@ -5,6 +5,7 @@ type NIC struct {
 	Network       NICNetwork
 	Hardware      NICHardware
 	HostInterface string // The host interface name to bind to in 'hostonly' and 'bridged' mode
+	NatNetwork string // The nat network to use in 'natnetwork' mode
 	MacAddr       string
 }
 
