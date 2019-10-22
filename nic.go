@@ -5,6 +5,7 @@ type NIC struct {
 	Network       NICNetwork
 	Hardware      NICHardware
 	HostInterface string // The host interface name to bind to in 'hostonly' and 'bridged' mode
+	NatNetwork string // The nat network to use in 'natnetwork' mode
 	MacAddr       string
 }
 
@@ -15,6 +16,7 @@ const (
 	NICNetAbsent       = NICNetwork("none")
 	NICNetDisconnected = NICNetwork("null")
 	NICNetNAT          = NICNetwork("nat")
+	NICNetNATNetwork   = NICNetwork("natnetwork")
 	NICNetBridged      = NICNetwork("bridged")
 	NICNetInternal     = NICNetwork("intnet")
 	NICNetHostonly     = NICNetwork("hostonly")
