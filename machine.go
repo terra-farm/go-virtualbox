@@ -166,7 +166,16 @@ func (m *Machine) Poweroff() error {
 	case Poweroff, Aborted, Saved:
 		return nil
 	}
-	return Manage().run("controlvm", m.Name, "poweroff")
+	for m.State != Poweroff { // busy wait until the machine is stopped, because it can lock machine deletion otherwise
+		if err := Manage().run("controlvm", m.Name, "poweroff"); err != nil {
+			return err
+		}
+		time.Sleep(1 * time.Second)
+		if err := m.Refresh(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // Restart gracefully restarts the machine.
