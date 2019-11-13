@@ -2,7 +2,10 @@ package virtualbox
 
 import (
 	"bytes"
+	"context"
 	"errors"
+	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -37,52 +40,48 @@ var (
 	ErrVBMNotFound     = errors.New("VBoxManage not found")
 )
 
-func vbm(args ...string) error {
-	cmd := exec.Command(VBM, args...)
-	if Verbose {
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		log.Printf("executing: %v %v", VBM, strings.Join(args, " "))
-	}
-	if err := cmd.Run(); err != nil {
-		if ee, ok := err.(*exec.Error); ok && ee == exec.ErrNotFound {
-			return ErrVBMNotFound
-		}
-		return err
-	}
-	return nil
-}
+// executor abstracts the execution method that is being used to run the
+// command.
+type executor func(context.Context, io.Writer, io.Writer, ...string) error
 
-func vbmOut(args ...string) (string, error) {
-	cmd := exec.Command(VBM, args...)
-	if Verbose {
-		cmd.Stderr = os.Stderr
-		log.Printf("executing: %v %v", VBM, strings.Join(args, " "))
-	}
+var defaultExecutor executor = cmdExecutor
 
-	b, err := cmd.Output()
-	if err != nil {
-		if ee, ok := err.(*exec.Error); ok && ee == exec.ErrNotFound {
-			err = ErrVBMNotFound
-		}
-	}
-	return string(b), err
-}
-
-func vbmOutErr(args ...string) (string, string, error) {
-	cmd := exec.Command(VBM, args...)
+func cmdExecutor(ctx context.Context, so io.Writer, se io.Writer, args ...string) error {
+	cmd := exec.CommandContext(ctx, VBM, args...)
 	if Verbose {
 		log.Printf("executing: %v %v", VBM, strings.Join(args, " "))
 	}
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
+	cmd.Stdout = so
+	cmd.Stderr = se
 	err := cmd.Run()
 	if err != nil {
 		if ee, ok := err.(*exec.Error); ok && ee == exec.ErrNotFound {
 			err = ErrVBMNotFound
 		}
 	}
-	return stdout.String(), stderr.String(), err
+	return err
+}
+
+func vbm(args ...string) error {
+	so, se := ioutil.Discard, ioutil.Discard
+	if Verbose {
+		so = os.Stdout
+		se = os.Stderr
+	}
+	return defaultExecutor(context.Background(), so, se, args...)
+}
+
+func vbmOut(args ...string) (string, error) {
+	so, se := new(bytes.Buffer), ioutil.Discard
+	if Verbose {
+		se = os.Stderr
+	}
+	err := defaultExecutor(context.Background(), so, se, args...)
+	return so.String(), err
+}
+
+func vbmOutErr(args ...string) (string, string, error) {
+	so, se := new(bytes.Buffer), new(bytes.Buffer)
+	err := defaultExecutor(context.Background(), so, se, args...)
+	return so.String(), se.String(), err
 }
