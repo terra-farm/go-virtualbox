@@ -2,6 +2,7 @@ language: go
 
 go:
   - "1.12.4"
+  - "1.13.4"
 
 env:
   - GO111MODULE=on
