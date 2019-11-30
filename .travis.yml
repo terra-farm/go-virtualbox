@@ -1,19 +1,19 @@
 language: go
 
 go:
-- "1.12.4"
+  - "1.12.4"
 
 env:
-- GO111MODULE=on
+  - GO111MODULE=on
 
 os:
   - linux
   - osx
 
 install:
-- go get github.com/mitchellh/gox
-- go get
-- go vet
-- gox -os "freebsd darwin linux windows" -arch "386 amd64"
+  - go get github.com/mitchellh/gox
+  - go get
+  - go vet
+  - gox -os "freebsd darwin linux windows" -arch "386 amd64"
 script:
-- go test
+  - go test

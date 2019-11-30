@@ -3,7 +3,6 @@ package virtualbox
 import (
 	"bufio"
 	"net"
-	"strconv"
 	"strings"
 )
 
@@ -18,7 +17,7 @@ type NATNet struct {
 
 // NATNets gets all NAT networks in a  map keyed by NATNet.Name.
 func NATNets() (map[string]NATNet, error) {
-	out, err := vbmOut("list", "natnets")
+	out, err := Manage().runOut("list", "natnets")
 	if err != nil {
 		return nil, err
 	}
@@ -48,18 +47,24 @@ func NATNets() (map[string]NATNet, error) {
 			}
 			n.IPv4.Mask = ipnet.Mask
 		case "IPv6 Prefix":
-			if val == "" {
-				continue
-			}
-			l, err := strconv.ParseUint(val, 10, 7)
+			// TODO: IPv6 CIDR parsing works fine on macOS, check on Windows
+			// if val == "" {
+			// 	continue
+			// }
+			// l, err := strconv.ParseUint(val, 10, 7)
+			// if err != nil {
+			// 	return nil, err
+			// }
+			// n.IPv6.Mask = net.CIDRMask(int(l), net.IPv6len*8)
+			_, ipnet, err := net.ParseCIDR(val)
 			if err != nil {
 				return nil, err
 			}
-			n.IPv6.Mask = net.CIDRMask(int(l), net.IPv6len*8)
+			n.IPv6.Mask = ipnet.Mask
 		case "DHCP Enabled":
-			n.DHCP = (val == "Yes")
+			n.DHCP = (val == stringYes)
 		case "Enabled":
-			n.Enabled = (val == "Yes")
+			n.Enabled = (val == stringYes)
 		}
 	}
 	if err := s.Err(); err != nil {

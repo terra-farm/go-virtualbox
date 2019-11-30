@@ -10,10 +10,10 @@ import (
 // MakeDiskImage makes a disk image at dest with the given size in MB. If r is
 // not nil, it will be read as a raw disk image to convert from.
 func MakeDiskImage(dest string, size uint, r io.Reader) error {
-	// Convert a raw image from stdin to the dest VMDK image.
+	// Convert a raw image from stdin to the dest VDI image.
 	sizeBytes := int64(size) << 20 // usually won't fit in 32-bit int (max 2GB)
-	cmd := exec.Command(VBM, "convertfromraw", "stdin", dest,
-		fmt.Sprintf("%d", sizeBytes), "--format", "VDI")
+	cmd := exec.Command(Manage().path(), "convertfromraw", "stdin", dest,
+		fmt.Sprintf("%d", sizeBytes), "--format", "VDI") // #nosec
 
 	if Verbose {
 		cmd.Stdout = os.Stdout
@@ -24,7 +24,7 @@ func MakeDiskImage(dest string, size uint, r io.Reader) error {
 	if err != nil {
 		return err
 	}
-	if err := cmd.Start(); err != nil {
+	if err = cmd.Start(); err != nil {
 		return err
 	}
 
