@@ -15,16 +15,11 @@ func logLn(msg string) {
 	logger.Print(msg + "\n")
 }
 
-func logF(format string, args ...interface{}) {
+// LogF
+func LogF(format string, args ...interface{}) {
 	Verbose = testing.Verbose()
 	if !Verbose {
 		return
 	}
 	logLn(fmt.Sprintf(format, args...))
-}
-
-func init() {
-	Debug = logF
-	Debug("Using Verbose Log")
-	Debug("testing.Verbose=%v", testing.Verbose())
 }
