@@ -77,6 +77,7 @@ type Machine struct {
 	NICs       []NIC
 }
 
+// New creates a new machine.
 func New() *Machine {
 	return &Machine{
 		BootOrder: make([]string, 0, 4),
