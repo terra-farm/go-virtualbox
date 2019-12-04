@@ -13,9 +13,13 @@ type StorageController struct {
 type SystemBus string
 
 const (
-	SysBusIDE    = SystemBus("ide")
-	SysBusSATA   = SystemBus("sata")
-	SysBusSCSI   = SystemBus("scsi")
+	// SysBusIDE when the storage controller provides an IDE bus.
+	SysBusIDE = SystemBus("ide")
+	// SysBusSATA when the storage controller provides a SATA bus.
+	SysBusSATA = SystemBus("sata")
+	// SysBusSCSI when the storage controller provides an SCSI bus.
+	SysBusSCSI = SystemBus("scsi")
+	// SysBusFloppy when the storage controller provides access to Floppy drives.
 	SysBusFloppy = SystemBus("floppy")
 )
 
@@ -23,14 +27,22 @@ const (
 type StorageControllerChipset string
 
 const (
-	CtrlLSILogic    = StorageControllerChipset("LSILogic")
+	// CtrlLSILogic when the storage controller emulates LSILogic hardware.
+	CtrlLSILogic = StorageControllerChipset("LSILogic")
+	// CtrlLSILogicSAS when the storage controller emulates LSILogicSAS hardware.
 	CtrlLSILogicSAS = StorageControllerChipset("LSILogicSAS")
-	CtrlBusLogic    = StorageControllerChipset("BusLogic")
-	CtrlIntelAHCI   = StorageControllerChipset("IntelAHCI")
-	CtrlPIIX3       = StorageControllerChipset("PIIX3")
-	CtrlPIIX4       = StorageControllerChipset("PIIX4")
-	CtrlICH6        = StorageControllerChipset("ICH6")
-	CtrlI82078      = StorageControllerChipset("I82078")
+	// CtrlBusLogic when the storage controller emulates BusLogic hardware.
+	CtrlBusLogic = StorageControllerChipset("BusLogic")
+	// CtrlIntelAHCI when the storage controller emulates IntelAHCI hardware.
+	CtrlIntelAHCI = StorageControllerChipset("IntelAHCI")
+	// CtrlPIIX3 when the storage controller emulates PIIX3 hardware.
+	CtrlPIIX3 = StorageControllerChipset("PIIX3")
+	// CtrlPIIX4 when the storage controller emulates PIIX4 hardware.
+	CtrlPIIX4 = StorageControllerChipset("PIIX4")
+	// CtrlICH6 when the storage controller emulates ICH6 hardware.
+	CtrlICH6 = StorageControllerChipset("ICH6")
+	// CtrlI82078 when the storage controller emulates I82078 hardware.
+	CtrlI82078 = StorageControllerChipset("I82078")
 )
 
 // StorageMedium represents the storage medium attached to a storage controller.
@@ -45,12 +57,15 @@ type StorageMedium struct {
 type DriveType string
 
 const (
+	// DriveDVD when the drive is a DVD reader/writer.
 	DriveDVD = DriveType("dvddrive")
+	// DriveHDD when the drive is a hard disk or SSD.
 	DriveHDD = DriveType("hdd")
+	// DriveFDD when the drive is a floppy.
 	DriveFDD = DriveType("fdd")
 )
 
-// Clone virtual harddrive
+// CloneHD virtual harddrive
 func CloneHD(input, output string) error {
-	return vbm("clonehd", input, output)
+	return Manage().run("clonehd", input, output)
 }

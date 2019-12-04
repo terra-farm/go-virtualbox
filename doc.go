@@ -37,5 +37,12 @@ The takeaway is we try our best to transit the virtual machine into the state
 you want it to be, and you only need to watch out for the potentially unsafe
 poweroff and reset.
 
+Guest Properties Management
+
+This part of the APIworks both on the host and the guest.
+
+The API enables to set & get specific properties, plus
+waiting on properties patterns (both blocking and non-blocking).
+
 */
 package virtualbox

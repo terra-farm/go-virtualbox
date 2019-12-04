@@ -1,8 +1,20 @@
 package virtualbox
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/golang/mock/gomock"
+)
 
 func TestDHCPs(t *testing.T) {
+	Setup(t)
+
+	if ManageMock != nil {
+		listDhcpServersOut := ReadTestData("vboxmanage-list-dhcpservers-1.out")
+		gomock.InOrder(
+			ManageMock.EXPECT().runOut("list", "dhcpservers").Return(listDhcpServersOut, nil).Times(1),
+		)
+	}
 	m, err := DHCPs()
 	if err != nil {
 		t.Fatal(err)
@@ -11,4 +23,6 @@ func TestDHCPs(t *testing.T) {
 	for _, dhcp := range m {
 		t.Logf("%+v", dhcp)
 	}
+
+	Teardown()
 }
