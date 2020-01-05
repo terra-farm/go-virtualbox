@@ -75,7 +75,7 @@ Then build: `make build` or:
 $ go build -v ./...
 ```
 
-* `default` run everyhing in order
+* `default` run everything in order
 * `deps` install dependencies (`dep` and others)
 * `build` run `go build ./...`
 * `test` run `go test ./...`
@@ -122,3 +122,9 @@ run `go test --run TestGuestProperty`.
 ```bash
 mockgen -source=vbcmd.go -destination=mockvbcmd_test.go -package=virtualbox -mock_names=Command=MockCommand
 ```
+
+## Using local changes with your own project
+
+If you have a project which depends on this library, you probably want to test your local changes of `go-virtualbox` in your project.
+See [this article](https://medium.com/@teivah/how-to-test-a-local-branch-with-go-mod-54df087fc9cc) on how to set up your environment
+to do this.
