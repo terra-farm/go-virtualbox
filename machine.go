@@ -31,21 +31,21 @@ type Flag int
 
 // Flag names in lowercases to be consistent with VBoxManage options.
 const (
-	acpi Flag = 1 << iota
-	ioapic
-	rtcuseutc
-	cpuhotplug
-	pae
-	longmode
-	synthcpu
-	hpet
-	hwvirtex
-	triplefaultreset
-	nestedpaging
-	largepages
-	vtxvpid
-	vtxux
-	accelerate3d
+	ACPI Flag = 1 << iota
+	IOAPIC
+	RTCUSEUTC
+	CPUHOTPLUG
+	PAE
+	LONGMODE
+	SYNTHCPU
+	HPET
+	HWVIRTEX
+	TRIPLEFAULTRESET
+	NESTEDPAGING
+	LARGEPAGES
+	VTXVPID
+	VTXUX
+	ACCELERATE3D
 )
 
 // Convert bool to "on"/"off"
@@ -371,21 +371,21 @@ func (m *Machine) Modify() error {
 		"--memory", fmt.Sprintf("%d", m.Memory),
 		"--vram", fmt.Sprintf("%d", m.VRAM),
 
-		"--acpi", m.Flag.Get(acpi),
-		"--ioapic", m.Flag.Get(ioapic),
-		"--rtcuseutc", m.Flag.Get(rtcuseutc),
-		"--cpuhotplug", m.Flag.Get(cpuhotplug),
-		"--pae", m.Flag.Get(pae),
-		"--longmode", m.Flag.Get(longmode),
-		"--synthcpu", m.Flag.Get(synthcpu),
-		"--hpet", m.Flag.Get(hpet),
-		"--hwvirtex", m.Flag.Get(hwvirtex),
-		"--triplefaultreset", m.Flag.Get(triplefaultreset),
-		"--nestedpaging", m.Flag.Get(nestedpaging),
-		"--largepages", m.Flag.Get(largepages),
-		"--vtxvpid", m.Flag.Get(vtxvpid),
-		"--vtxux", m.Flag.Get(vtxux),
-		"--accelerate3d", m.Flag.Get(accelerate3d),
+		"--acpi", m.Flag.Get(ACPI),
+		"--ioapic", m.Flag.Get(IOAPIC),
+		"--rtcuseutc", m.Flag.Get(RTCUSEUTC),
+		"--cpuhotplug", m.Flag.Get(CPUHOTPLUG),
+		"--pae", m.Flag.Get(PAE),
+		"--longmode", m.Flag.Get(LONGMODE),
+		"--synthcpu", m.Flag.Get(SYNTHCPU),
+		"--hpet", m.Flag.Get(HPET),
+		"--hwvirtex", m.Flag.Get(HWVIRTEX),
+		"--triplefaultreset", m.Flag.Get(TRIPLEFAULTRESET),
+		"--nestedpaging", m.Flag.Get(NESTEDPAGING),
+		"--largepages", m.Flag.Get(LARGEPAGES),
+		"--vtxvpid", m.Flag.Get(VTXVPID),
+		"--vtxux", m.Flag.Get(VTXUX),
+		"--accelerate3d", m.Flag.Get(ACCELERATE3D),
 	}
 
 	for i, dev := range m.BootOrder {
