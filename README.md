@@ -25,7 +25,7 @@ experimental at the moment and you should expect frequent changes.
 
 | Project | Status | Notes |
 |---------|--------|-------|
-| [Github Actions](https://github.com/terra-farm/go-virtualbox) | [![Github Actions](https://github.com/terra-farm/go-vritualbox/workflows/Continuous%20Integration/badge.svg)](https://github.com/terra-farm/go-virtualbox) | |
+| [Github Actions](https://github.com/features/actions) | [![Continuous Integration](https://github.com/terra-farm/go-virtualbox/workflows/Continuous%20Integration/badge.svg)](https://github.com/terra-farm/go-virtualbox/actions) | |
 | [Go Report Card](https://goreportcard.com/) | [![Go Report Card](https://goreportcard.com/badge/github.com/terra-farm/go-virtualbox?style=flat-square)](https://goreportcard.com/report/github.com/terra-farm/go-virtualbox) | scan  code with `gofmt`, `go vet`, `gocyclo`, `golint`, `ineffassign`, `license` and `misspell`. |
 | [GoDoc](http://godoc.org) | [![Go Doc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square)](http://godoc.org/github.com/terra-farm/go-virtualbox) | |
 | Release | [![Release](https://img.shields.io/github/release/terra-farm/go-virtualbox.svg?style=flat-square)](https://github.com/terra-farm/go-virtualbox/releases/latest) | |
