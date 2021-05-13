@@ -19,7 +19,7 @@ type NATNet struct {
 }
 
 func (n *NATNet) Delete() error {
-	err := vbm("natnetwork", "remove", "--netname", n.Name)
+	err := Manage().run("natnetwork", "remove", "--netname", n.Name)
 	if err != nil {
 		return err
 	}
@@ -28,21 +28,21 @@ func (n *NATNet) Delete() error {
 
 func (n *NATNet) Config() error {
 	if n.IPv4.IP != nil && n.IPv4.Mask != nil {
-		if err := vbm("natnetwork", "modify", "--netname", n.Name, "--network", n.IPv4.String()); err != nil {
+		if err := Manage().run("natnetwork", "modify", "--netname", n.Name, "--network", n.IPv4.String()); err != nil {
 			return err
 		}
 	}
 
-	if err := vbm("natnetwork", "modify", "--netname", n.Name, "--dhcp", bool2string(n.DHCP)); err != nil {
+	if err := Manage().run("natnetwork", "modify", "--netname", n.Name, "--dhcp", bool2string(n.DHCP)); err != nil {
 		return err
 	}
 
 	if n.Enabled {
-		if err := vbm("natnetwork", "modify", "--netname", n.Name, "--enable"); err != nil {
+		if err := Manage().run("natnetwork", "modify", "--netname", n.Name, "--enable"); err != nil {
 			return err
 		}
 	} else {
-		if err := vbm("natnetwork", "modify", "--netname", n.Name, "--disable"); err != nil {
+		if err := Manage().run("natnetwork", "modify", "--netname", n.Name, "--disable"); err != nil {
 			return err
 		}
 	}
@@ -51,7 +51,7 @@ func (n *NATNet) Config() error {
 }
 
 func CreateNATNet(name string, network string, dhcp bool) (*NATNet, error) {
-	err := vbm("natnetwork", "add", "--netname", name, "--network", network, "--dhcp", bool2string(dhcp))
+	err := Manage().run("natnetwork", "add", "--netname", name, "--network", network, "--dhcp", bool2string(dhcp))
 	if err != nil {
 		return nil, err
 	}
