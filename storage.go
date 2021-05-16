@@ -21,6 +21,14 @@ const (
 	SysBusSCSI = SystemBus("scsi")
 	// SysBusFloppy when the storage controller provides access to Floppy drives.
 	SysBusFloppy = SystemBus("floppy")
+        // SysBusSAS storage controller provides a SAS bus.
+        SysBusSAS = SystemBus("sas")
+        // SysBusUSB storage controller proveds an USB bus.
+        SysBusUSB = SystemBus("usb")
+        // SysBusPCIE storage controller proveds a PCIe bus.
+        SysBusPCIE = SystemBus("pcie")
+        // SysBusVirtio storage controller proveds a Virtio bus.
+        SysBusVirtio = SystemBus("virtio")
 )
 
 // StorageControllerChipset represents the hardware of a storage controller.
@@ -43,6 +51,12 @@ const (
 	CtrlICH6 = StorageControllerChipset("ICH6")
 	// CtrlI82078 when the storage controller emulates I82078 hardware.
 	CtrlI82078 = StorageControllerChipset("I82078")
+        // CtrlUSB storage controller emulates USB hardware.
+        CtrlUSB = StorageControllerChipset("USB")
+        // CtrlNVME storage controller emulates NVME hardware.
+        CtrlNVME = StorageControllerChipset("NVMe")
+        // CtrlVirtIO storage controller emulates VirtIO hardware.
+        CtrlVirtIO = StorageControllerChipset("VirtIO")
 )
 
 // StorageMedium represents the storage medium attached to a storage controller.
