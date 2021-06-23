@@ -1,6 +1,19 @@
 name: Continuous Integration
 on: [push]
 jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+    - name: Lint with golangci-lint
+      uses: golangci/golangci-lint-action@v2
+      with:
+        version: v1.40.1
+
   build:
     name: Build
     runs-on: ${{ matrix.os }}
