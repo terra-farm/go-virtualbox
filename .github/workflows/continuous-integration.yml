@@ -24,8 +24,8 @@ jobs:
         - windows-latest
         - macOS-latest
         go:
-        - "1.13"
-        - "1.14"
+        - "1.16"
+        - "1.15"
     steps:
       - name: Set up Go
         uses: actions/setup-go@v1
