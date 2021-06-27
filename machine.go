@@ -37,7 +37,6 @@ const (
 	CPUHOTPLUG
 	PAE
 	LONGMODE
-	SYNTHCPU
 	HPET
 	HWVIRTEX
 	TRIPLEFAULTRESET
@@ -377,7 +376,6 @@ func (m *Machine) Modify() error {
 		"--cpuhotplug", m.Flag.Get(CPUHOTPLUG),
 		"--pae", m.Flag.Get(PAE),
 		"--longmode", m.Flag.Get(LONGMODE),
-		"--synthcpu", m.Flag.Get(SYNTHCPU),
 		"--hpet", m.Flag.Get(HPET),
 		"--hwvirtex", m.Flag.Get(HWVIRTEX),
 		"--triplefaultreset", m.Flag.Get(TRIPLEFAULTRESET),
