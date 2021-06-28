@@ -78,7 +78,7 @@ func TestWaitGuestProperty(t *testing.T) {
 			second := time.Second
 			time.Sleep(1 * second)
 			t.Logf(">>> key='%s', val='%s'", keyE, valE)
-			SetGuestProperty(VM, keyE, valE)
+			_ = SetGuestProperty(VM, keyE, valE)
 		}()
 	}
 
@@ -117,15 +117,15 @@ func TestWaitGuestProperties(t *testing.T) {
 
 			time.Sleep(1 * second)
 			t.Logf(">>> key='%s', val='%s'", keyE, val1E)
-			SetGuestProperty(VM, keyE, val1E)
+			_ = SetGuestProperty(VM, keyE, val1E)
 
 			time.Sleep(1 * second)
 			t.Logf(">>> key='%s', val='%s'", keyE, val2E)
-			SetGuestProperty(VM, keyE, val2E)
+			_ = SetGuestProperty(VM, keyE, val2E)
 
 			time.Sleep(1 * second)
 			t.Logf(">>> key='%s', val='%s'", keyE, val1E)
-			SetGuestProperty(VM, keyE, val1E)
+			_ = SetGuestProperty(VM, keyE, val1E)
 		}()
 	}
 
@@ -172,7 +172,7 @@ func TestWaitGuestPropertiesQuit(t *testing.T) {
 
 			time.Sleep(1 * second)
 			t.Logf(">>> key='%s', val='%s'", keyE, val1E)
-			SetGuestProperty(VM, keyE, val1E)
+			_ = SetGuestProperty(VM, keyE, val1E)
 		}()
 	}
 

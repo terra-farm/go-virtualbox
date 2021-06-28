@@ -45,7 +45,7 @@ func ExampleWaitGuestProperty() {
 	go func() {
 		second := time.Second
 		time.Sleep(1 * second)
-		virtualbox.SetGuestProperty(VM, "test_name", "test_val")
+		_ = virtualbox.SetGuestProperty(VM, "test_name", "test_val")
 	}()
 
 	name, val, err := virtualbox.WaitGuestProperty(VM, "test_*")
@@ -60,13 +60,13 @@ func ExampleWaitGuestProperties() {
 		second := time.Second
 
 		time.Sleep(1 * second)
-		virtualbox.SetGuestProperty(VM, "test_name", "test_val1")
+		_ = virtualbox.SetGuestProperty(VM, "test_name", "test_val1")
 
 		time.Sleep(1 * second)
-		virtualbox.SetGuestProperty(VM, "test_name", "test_val2")
+		_ = virtualbox.SetGuestProperty(VM, "test_name", "test_val2")
 
 		time.Sleep(1 * second)
-		virtualbox.SetGuestProperty(VM, "test_name", "test_val1")
+		_ = virtualbox.SetGuestProperty(VM, "test_name", "test_val1")
 	}()
 
 	wg := new(sync.WaitGroup)
