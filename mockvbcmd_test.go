@@ -5,75 +5,66 @@
 package virtualbox
 
 import (
-	gomock "github.com/golang/mock/gomock"
+	context "context"
 	reflect "reflect"
+
+	gomock "github.com/golang/mock/gomock"
 )
 
-// MockCommand is a mock of Command interface
+// MockCommand is a mock of Command interface.
 type MockCommand struct {
 	ctrl     *gomock.Controller
 	recorder *MockCommandMockRecorder
 }
 
-// MockCommandMockRecorder is the mock recorder for MockCommand
+// MockCommandMockRecorder is the mock recorder for MockCommand.
 type MockCommandMockRecorder struct {
 	mock *MockCommand
 }
 
-// NewMockCommand creates a new mock instance
+// NewMockCommand creates a new mock instance.
 func NewMockCommand(ctrl *gomock.Controller) *MockCommand {
 	mock := &MockCommand{ctrl: ctrl}
 	mock.recorder = &MockCommandMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockCommand) EXPECT() *MockCommandMockRecorder {
 	return m.recorder
 }
 
-// setOpts mocks base method
-func (m *MockCommand) setOpts(opts ...option) Command {
-	varargs := []interface{}{}
-	for _, a := range opts {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "setOpts", varargs...)
-	ret0, _ := ret[0].(Command)
-	return ret0
-}
-
-// setOpts indicates an expected call of setOpts
-func (mr *MockCommandMockRecorder) setOpts(opts ...interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "setOpts", reflect.TypeOf((*MockCommand)(nil).setOpts), opts...)
-}
-
-// isGuest mocks base method
+// isGuest mocks base method.
 func (m *MockCommand) isGuest() bool {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "isGuest")
 	ret0, _ := ret[0].(bool)
 	return ret0
 }
 
-// isGuest indicates an expected call of isGuest
+// isGuest indicates an expected call of isGuest.
 func (mr *MockCommandMockRecorder) isGuest() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isGuest", reflect.TypeOf((*MockCommand)(nil).isGuest))
 }
 
-// path mocks base method
+// path mocks base method.
 func (m *MockCommand) path() string {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "path")
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
-// path indicates an expected call of path
+// path indicates an expected call of path.
 func (mr *MockCommandMockRecorder) path() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "path", reflect.TypeOf((*MockCommand)(nil).path))
 }
 
-// run mocks base method
+// run mocks base method.
 func (m *MockCommand) run(args ...string) error {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{}
 	for _, a := range args {
 		varargs = append(varargs, a)
@@ -83,13 +74,15 @@ func (m *MockCommand) run(args ...string) error {
 	return ret0
 }
 
-// run indicates an expected call of run
+// run indicates an expected call of run.
 func (mr *MockCommandMockRecorder) run(args ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "run", reflect.TypeOf((*MockCommand)(nil).run), args...)
 }
 
-// runOut mocks base method
+// runOut mocks base method.
 func (m *MockCommand) runOut(args ...string) (string, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{}
 	for _, a := range args {
 		varargs = append(varargs, a)
@@ -100,13 +93,15 @@ func (m *MockCommand) runOut(args ...string) (string, error) {
 	return ret0, ret1
 }
 
-// runOut indicates an expected call of runOut
+// runOut indicates an expected call of runOut.
 func (mr *MockCommandMockRecorder) runOut(args ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "runOut", reflect.TypeOf((*MockCommand)(nil).runOut), args...)
 }
 
-// runOutErr mocks base method
+// runOutErr mocks base method.
 func (m *MockCommand) runOutErr(args ...string) (string, string, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{}
 	for _, a := range args {
 		varargs = append(varargs, a)
@@ -118,7 +113,47 @@ func (m *MockCommand) runOutErr(args ...string) (string, string, error) {
 	return ret0, ret1, ret2
 }
 
-// runOutErr indicates an expected call of runOutErr
+// runOutErr indicates an expected call of runOutErr.
 func (mr *MockCommandMockRecorder) runOutErr(args ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "runOutErr", reflect.TypeOf((*MockCommand)(nil).runOutErr), args...)
+}
+
+// runOutErrContext mocks base method.
+func (m *MockCommand) runOutErrContext(ctx context.Context, args ...string) (string, string, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx}
+	for _, a := range args {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "runOutErrContext", varargs...)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// runOutErrContext indicates an expected call of runOutErrContext.
+func (mr *MockCommandMockRecorder) runOutErrContext(ctx interface{}, args ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx}, args...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "runOutErrContext", reflect.TypeOf((*MockCommand)(nil).runOutErrContext), varargs...)
+}
+
+// setOpts mocks base method.
+func (m *MockCommand) setOpts(opts ...option) Command {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "setOpts", varargs...)
+	ret0, _ := ret[0].(Command)
+	return ret0
+}
+
+// setOpts indicates an expected call of setOpts.
+func (mr *MockCommandMockRecorder) setOpts(opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "setOpts", reflect.TypeOf((*MockCommand)(nil).setOpts), opts...)
 }

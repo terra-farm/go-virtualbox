@@ -260,7 +260,7 @@ func (m *Machine) Start() error {
 		args = []string{"startvm", m.Name, "--type", "headless"}
 	}
 
-	_, msg, err := Run(context.Background(), args...)
+	_, msg, err := vboxManageRun(context.Background(), args...)
 	if err != nil {
 		return errors.New(msg)
 	}
@@ -406,44 +406,44 @@ func CreateMachine(name, basefolder string) (*Machine, error) {
 	return m, nil
 }
 
-// Modify changes the settings of the machine.
-func (m *Machine) Modify() error {
-	args := []string{"modifyvm", m.Name,
-		"--firmware", m.Firmware,
+// UpdateMachine updates the machine details based on the struct fields.
+func (m *Manager) UpdateMachine(ctx context.Context, vm *Machine) error {
+	args := []string{"modifyvm", vm.Name,
+		"--firmware", vm.Firmware,
 		"--bioslogofadein", "off",
 		"--bioslogofadeout", "off",
 		"--bioslogodisplaytime", "0",
 		"--biosbootmenu", "disabled",
 
-		"--ostype", m.OSType,
-		"--cpus", fmt.Sprintf("%d", m.CPUs),
-		"--memory", fmt.Sprintf("%d", m.Memory),
-		"--vram", fmt.Sprintf("%d", m.VRAM),
+		"--ostype", vm.OSType,
+		"--cpus", fmt.Sprintf("%d", vm.CPUs),
+		"--memory", fmt.Sprintf("%d", vm.Memory),
+		"--vram", fmt.Sprintf("%d", vm.VRAM),
 
-		"--acpi", m.Flag.Get(ACPI),
-		"--ioapic", m.Flag.Get(IOAPIC),
-		"--rtcuseutc", m.Flag.Get(RTCUSEUTC),
-		"--cpuhotplug", m.Flag.Get(CPUHOTPLUG),
-		"--pae", m.Flag.Get(PAE),
-		"--longmode", m.Flag.Get(LONGMODE),
-		"--hpet", m.Flag.Get(HPET),
-		"--hwvirtex", m.Flag.Get(HWVIRTEX),
-		"--triplefaultreset", m.Flag.Get(TRIPLEFAULTRESET),
-		"--nestedpaging", m.Flag.Get(NESTEDPAGING),
-		"--largepages", m.Flag.Get(LARGEPAGES),
-		"--vtxvpid", m.Flag.Get(VTXVPID),
-		"--vtxux", m.Flag.Get(VTXUX),
-		"--accelerate3d", m.Flag.Get(ACCELERATE3D),
+		"--acpi", vm.Flag.Get(ACPI),
+		"--ioapic", vm.Flag.Get(IOAPIC),
+		"--rtcuseutc", vm.Flag.Get(RTCUSEUTC),
+		"--cpuhotplug", vm.Flag.Get(CPUHOTPLUG),
+		"--pae", vm.Flag.Get(PAE),
+		"--longmode", vm.Flag.Get(LONGMODE),
+		"--hpet", vm.Flag.Get(HPET),
+		"--hwvirtex", vm.Flag.Get(HWVIRTEX),
+		"--triplefaultreset", vm.Flag.Get(TRIPLEFAULTRESET),
+		"--nestedpaging", vm.Flag.Get(NESTEDPAGING),
+		"--largepages", vm.Flag.Get(LARGEPAGES),
+		"--vtxvpid", vm.Flag.Get(VTXVPID),
+		"--vtxux", vm.Flag.Get(VTXUX),
+		"--accelerate3d", vm.Flag.Get(ACCELERATE3D),
 	}
 
-	for i, dev := range m.BootOrder {
+	for i, dev := range vm.BootOrder {
 		if i > 3 {
 			break // Only four slots `--boot{1,2,3,4}`. Ignore the rest.
 		}
 		args = append(args, fmt.Sprintf("--boot%d", i+1), dev)
 	}
 
-	for i, nic := range m.NICs {
+	for i, nic := range vm.NICs {
 		n := i + 1
 		args = append(args,
 			fmt.Sprintf("--nic%d", n), string(nic.Network),
@@ -456,10 +456,14 @@ func (m *Machine) Modify() error {
 		}
 	}
 
-	if err := Manage().run(args...); err != nil {
+	if _, _, err := m.run(ctx, args...); err != nil {
 		return err
 	}
-	return m.Refresh()
+	return vm.Refresh()
+}
+
+func (m *Machine) Modify() error {
+	return defaultManager.UpdateMachine(context.Background(), m)
 }
 
 // AddNATPF adds a NAT port forarding rule to the n-th NIC with the given name.
@@ -513,22 +517,27 @@ func (m *Machine) DelStorageCtl(name string) error {
 
 // AttachStorage attaches a storage medium to the named storage controller.
 func (m *Machine) AttachStorage(ctlName string, medium StorageMedium) error {
-	return Manage().run("storageattach", m.Name, "--storagectl", ctlName,
+	_, _, err := defaultManager.run(context.Background(),
+		"storageattach", m.Name, "--storagectl", ctlName,
 		"--port", fmt.Sprintf("%d", medium.Port),
 		"--device", fmt.Sprintf("%d", medium.Device),
 		"--type", string(medium.DriveType),
 		"--medium", medium.Medium,
 	)
+	return err
 }
 
 // SetExtraData attaches custom string to the VM.
 func (m *Machine) SetExtraData(key, val string) error {
-	return Manage().run("setextradata", m.Name, key, val)
+	_, _, err := defaultManager.run(context.Background(),
+		"setextradata", m.Name, key, val)
+	return err
 }
 
 // GetExtraData retrieves custom string from the VM.
 func (m *Machine) GetExtraData(key string) (*string, error) {
-	value, err := Manage().runOut("getextradata", m.Name, key)
+	value, _, err := defaultManager.run(context.Background(),
+		"getextradata", m.Name, key)
 	if err != nil {
 		return nil, err
 	}
@@ -544,13 +553,19 @@ func (m *Machine) GetExtraData(key string) (*string, error) {
 
 // DeleteExtraData removes custom string from the VM.
 func (m *Machine) DeleteExtraData(key string) error {
-	return Manage().run("setextradata", m.Name, key)
+	_, _, err := defaultManager.run(context.Background(),
+		"setextradata", m.Name, key)
+	return err
 }
 
 // CloneMachine clones the given machine name into a new one.
 func CloneMachine(baseImageName string, newImageName string, register bool) error {
 	if register {
-		return Manage().run("clonevm", baseImageName, "--name", newImageName, "--register")
+		_, _, err := defaultManager.run(context.Background(),
+			"clonevm", baseImageName, "--name", newImageName, "--register")
+		return err
 	}
-	return Manage().run("clonevm", baseImageName, "--name", newImageName)
+	_, _, err := defaultManager.run(context.Background(),
+		"clonevm", baseImageName, "--name", newImageName)
+	return err
 }

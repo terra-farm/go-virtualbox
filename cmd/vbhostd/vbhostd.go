@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
@@ -38,9 +39,11 @@ func main() {
 		logger.Print(msg + "\n")
 	}
 
+	manager := virtualbox.NewManager()
+
 	var vms []string
 	if *vm == "all" {
-		machines, err := virtualbox.ListMachines()
+		machines, err := manager.ListMachines(context.Background())
 		if err != nil {
 			panic(err)
 		}

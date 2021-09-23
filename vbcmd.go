@@ -2,6 +2,7 @@ package virtualbox
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"os"
 	"os/exec"
@@ -19,6 +20,7 @@ type Command interface {
 	run(args ...string) error
 	runOut(args ...string) (string, error)
 	runOutErr(args ...string) (string, string, error)
+	runOutErrContext(ctx context.Context, args ...string) (string, string, error)
 }
 
 var (
@@ -63,7 +65,7 @@ func (vbcmd command) path() string {
 	return vbcmd.program
 }
 
-func (vbcmd command) prepare(args []string) *exec.Cmd {
+func (vbcmd command) prepare(ctx context.Context, args []string) *exec.Cmd {
 	program := vbcmd.program
 	argv := []string{}
 	Debug("Command: '%+v', runtime.GOOS: '%s'", vbcmd, runtime.GOOS)
@@ -73,12 +75,12 @@ func (vbcmd command) prepare(args []string) *exec.Cmd {
 	}
 	argv = append(argv, args...)
 	Debug("executing: %v %v", program, argv)
-	return exec.Command(program, argv...) // #nosec
+	return exec.CommandContext(ctx, program, argv...) // #nosec
 }
 
 func (vbcmd command) run(args ...string) error {
 	defer vbcmd.setOpts(sudo(false))
-	cmd := vbcmd.prepare(args)
+	cmd := vbcmd.prepare(context.Background(), args)
 	if Verbose {
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
@@ -94,7 +96,7 @@ func (vbcmd command) run(args ...string) error {
 
 func (vbcmd command) runOut(args ...string) (string, error) {
 	defer vbcmd.setOpts(sudo(false))
-	cmd := vbcmd.prepare(args)
+	cmd := vbcmd.prepare(context.Background(), args)
 	if Verbose {
 		cmd.Stderr = os.Stderr
 	}
@@ -108,9 +110,9 @@ func (vbcmd command) runOut(args ...string) (string, error) {
 	return string(b), err
 }
 
-func (vbcmd command) runOutErr(args ...string) (string, string, error) {
+func (vbcmd command) runOutErrContext(ctx context.Context, args ...string) (string, string, error) {
 	defer vbcmd.setOpts(sudo(false))
-	cmd := vbcmd.prepare(args)
+	cmd := vbcmd.prepare(ctx, args)
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 	cmd.Stdout = &stdout
@@ -122,4 +124,8 @@ func (vbcmd command) runOutErr(args ...string) (string, string, error) {
 		}
 	}
 	return stdout.String(), stderr.String(), err
+}
+
+func (vbcmd command) runOutErr(args ...string) (string, string, error) {
+	return vbcmd.runOutErrContext(context.Background(), args...)
 }
