@@ -1,6 +1,9 @@
 package virtualbox
 
-import "net"
+import (
+	"context"
+	"net"
+)
 
 // ParseIPv4Mask parses IPv4 netmask written in IP form (e.g. 255.255.255.0).
 // This function should really belong to the net package.
