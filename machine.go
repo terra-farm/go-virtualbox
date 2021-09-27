@@ -2,6 +2,8 @@ package virtualbox
 
 import (
 	"bufio"
+	"context"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"strconv"
@@ -98,14 +100,22 @@ func (m *Machine) Refresh() error {
 	return nil
 }
 
-// Start starts the machine.
+// Start the machine, and return the underlying error when unable to do so.
 func (m *Machine) Start() error {
+	var args []string
+
 	switch m.State {
 	case Paused:
-		return Manage().run("controlvm", m.Name, "resume")
+		args = []string{"controlvm", m.Name, "resume"}
 	case Poweroff, Saved, Aborted:
-		return Manage().run("startvm", m.Name, "--type", "headless")
+		args = []string{"startvm", m.Name, "--type", "headless"}
 	}
+
+	_, msg, err := Run(context.Background(), args...)
+	if err != nil {
+		return errors.New(msg)
+	}
+
 	return nil
 }
 
