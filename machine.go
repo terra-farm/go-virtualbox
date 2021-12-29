@@ -65,6 +65,7 @@ func (f Flag) Get(o Flag) string {
 // Machine information.
 type Machine struct {
 	Name       string
+	Firmware   string
 	UUID       string
 	State      MachineState
 	CPUs       uint
@@ -252,6 +253,7 @@ func GetMachine(id string) (*Machine, error) {
 	/* Extract basic info */
 	m := New()
 	m.Name = propMap["name"]
+	m.Firmware = propMap["firmware"]
 	m.UUID = propMap["UUID"]
 	m.State = MachineState(propMap["VMState"])
 	n, err := strconv.ParseUint(propMap["memory"], 10, 32)
@@ -369,7 +371,7 @@ func CreateMachine(name, basefolder string) (*Machine, error) {
 // Modify changes the settings of the machine.
 func (m *Machine) Modify() error {
 	args := []string{"modifyvm", m.Name,
-		"--firmware", "bios",
+		"--firmware", m.Firmware,
 		"--bioslogofadein", "off",
 		"--bioslogofadeout", "off",
 		"--bioslogodisplaytime", "0",
