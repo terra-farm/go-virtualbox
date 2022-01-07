@@ -176,7 +176,16 @@ func (m *Machine) Poweroff() error {
 	case Poweroff, Aborted, Saved:
 		return nil
 	}
-	return Manage().run("controlvm", m.Name, "poweroff")
+	for m.State != Poweroff { // busy wait until the machine is stopped, because it can lock machine deletion otherwise
+		if err := Manage().run("controlvm", m.Name, "poweroff"); err != nil {
+			return err
+		}
+		time.Sleep(1 * time.Second)
+		if err := m.Refresh(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // Restart gracefully restarts the machine.
@@ -294,6 +303,8 @@ func GetMachine(id string) (*Machine, error) {
 			nic.HostInterface = propMap[fmt.Sprintf("hostonlyadapter%d", i)]
 		} else if nic.Network == NICNetBridged {
 			nic.HostInterface = propMap[fmt.Sprintf("bridgeadapter%d", i)]
+		} else if nic.Network == NICNetNATNetwork {
+			nic.NatNetwork = propMap[fmt.Sprintf("nat-network%d", i)]
 		}
 		m.NICs = append(m.NICs, nic)
 	}
@@ -415,6 +426,8 @@ func (m *Machine) Modify() error {
 			args = append(args, fmt.Sprintf("--hostonlyadapter%d", n), nic.HostInterface)
 		} else if nic.Network == NICNetBridged {
 			args = append(args, fmt.Sprintf("--bridgeadapter%d", n), nic.HostInterface)
+		} else if nic.Network == NICNetNATNetwork {
+			args = append(args, fmt.Sprintf("--nat-network%d", n), nic.NatNetwork)
 		}
 	}
 
@@ -447,6 +460,8 @@ func (m *Machine) SetNIC(n int, nic NIC) error {
 		args = append(args, fmt.Sprintf("--hostonlyadapter%d", n), nic.HostInterface)
 	} else if nic.Network == NICNetBridged {
 		args = append(args, fmt.Sprintf("--bridgeadapter%d", n), nic.HostInterface)
+	} else if nic.Network == NICNetNATNetwork {
+			args = append(args, fmt.Sprintf("--nat-network%d", n), nic.NatNetwork)
 	}
 	return Manage().run(args...)
 }

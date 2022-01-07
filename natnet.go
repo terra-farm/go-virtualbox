@@ -4,8 +4,11 @@ import (
 	"bufio"
 	"net"
 	"strings"
+	"errors"
 )
-
+var (
+		ErrNoSuchNet = errors.New("No such NAT network")
+)
 // A NATNet defines a NAT network.
 type NATNet struct {
 	Name    string
@@ -13,6 +16,59 @@ type NATNet struct {
 	IPv6    net.IPNet
 	DHCP    bool
 	Enabled bool
+}
+
+func (n *NATNet) Delete() error {
+	err := Manage().run("natnetwork", "remove", "--netname", n.Name)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (n *NATNet) Config() error {
+	if n.IPv4.IP != nil && n.IPv4.Mask != nil {
+		if err := Manage().run("natnetwork", "modify", "--netname", n.Name, "--network", n.IPv4.String()); err != nil {
+			return err
+		}
+	}
+
+	if err := Manage().run("natnetwork", "modify", "--netname", n.Name, "--dhcp", bool2string(n.DHCP)); err != nil {
+		return err
+	}
+
+	if n.Enabled {
+		if err := Manage().run("natnetwork", "modify", "--netname", n.Name, "--enable"); err != nil {
+			return err
+		}
+	} else {
+		if err := Manage().run("natnetwork", "modify", "--netname", n.Name, "--disable"); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func CreateNATNet(name string, network string, dhcp bool) (*NATNet, error) {
+	err := Manage().run("natnetwork", "add", "--netname", name, "--network", network, "--dhcp", bool2string(dhcp))
+	if err != nil {
+		return nil, err
+	}
+	_, ipnet, err := net.ParseCIDR(network)
+	return &NATNet{Name: name, IPv4: *ipnet, DHCP: dhcp, Enabled: true}, nil
+}
+
+func GetNATNetwork(name string) (*NATNet, error) {
+	natnets, err := NATNets()
+	if err != nil {
+		return nil, err
+	}
+	natnet, ok := natnets[name]
+	if !ok {
+		return nil, ErrNoSuchNet
+	}
+	return &natnet, nil
 }
 
 // NATNets gets all NAT networks in a  map keyed by NATNet.Name.
@@ -38,13 +94,12 @@ func NATNets() (map[string]NATNet, error) {
 		switch key, val := res[1], res[2]; key {
 		case "NetworkName":
 			n.Name = val
-		case "IP":
-			n.IPv4.IP = net.ParseIP(val)
 		case "Network":
 			_, ipnet, err := net.ParseCIDR(val)
 			if err != nil {
 				return nil, err
 			}
+			n.IPv4.IP = ipnet.IP
 			n.IPv4.Mask = ipnet.Mask
 		case "IPv6 Prefix":
 			// TODO: IPv6 CIDR parsing works fine on macOS, check on Windows
