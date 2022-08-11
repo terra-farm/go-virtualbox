@@ -8,9 +8,125 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 )
+
+// Machine returns the information about existing virtualbox machine identified
+// by either its UUID or name.
+func (m *Manager) Machine(ctx context.Context, id string) (*Machine, error) {
+	// There is a strage behavior where running multiple instances of
+	// 'VBoxManage showvminfo' on same VM simultaneously can return an error of
+	// 'object is not ready (E_ACCESSDENIED)', so we sequential the operation with a mutex.
+	// Note if you are running multiple process of go-virtualbox or 'showvminfo'
+	// in the command line side by side, this not gonna work.
+	// TODO: Verify the above is still true.
+	m.lock.Lock()
+	stdout, stderr, err := m.run(ctx, "showvminfo", id, "--machinereadable")
+	m.lock.Unlock()
+	if err != nil {
+		if reMachineNotFound.FindString(stderr) != "" {
+			return nil, ErrMachineNotExist
+		}
+		return nil, err
+	}
+
+	/* Read all VM info into a map */
+	props := make(map[string]string)
+	s := bufio.NewScanner(strings.NewReader(stdout))
+	for s.Scan() {
+		res := reVMInfoLine.FindStringSubmatch(s.Text())
+		if res == nil {
+			continue
+		}
+		key := res[1]
+		if key == "" {
+			key = res[2]
+		}
+		val := res[3]
+		if val == "" {
+			val = res[4]
+		}
+		props[key] = val
+	}
+
+	if err := s.Err(); err != nil {
+		return nil, fmt.Errorf("unable to scan all fields: %w", err)
+	}
+
+	// error that occured during parsing
+	var perr error
+
+	sp := func(field string, def ...string) string {
+		if v, exists := props[field]; exists {
+			return v
+		}
+		if len(def) < 1 {
+			return ""
+		}
+		return def[0]
+	}
+
+	up := func(field string, def ...uint) uint {
+		if v, exists := props[field]; exists {
+			n, err := strconv.ParseUint(v, 10, 32)
+			if err != nil {
+				perr = err
+				return 0
+			}
+			return uint(n)
+		}
+		if len(def) < 1 {
+			return 0
+		}
+		return def[0]
+	}
+
+	/* Extract basic info */
+	vm := &Machine{
+		// TODO: This was in New, verify is this still correct.
+		BootOrder:  make([]string, 0, 4),
+		NICs:       make([]NIC, 0, 4),
+		Name:       sp("name"),
+		Firmware:   sp("firmware"),
+		UUID:       sp("UUID"),
+		State:      MachineState(sp("VMState")),
+		Memory:     up("memory"),
+		CPUs:       up("cpus"),
+		VRAM:       up("vram"),
+		CfgFile:    sp("CfgFile"),
+		BaseFolder: filepath.Dir(sp("CfgFile")),
+	}
+
+	/* Extract NIC info */
+	for i := 1; i <= 4; i++ {
+		var nic NIC
+		nicType, ok := props[fmt.Sprintf("nic%d", i)]
+		if !ok || nicType == "none" {
+			break
+		}
+		nic.Network = NICNetwork(nicType)
+		nic.Hardware = NICHardware(props[fmt.Sprintf("nictype%d", i)])
+		if nic.Hardware == "" {
+			return nil, fmt.Errorf("Could not find corresponding 'nictype%d'", i)
+		}
+		nic.MacAddr = props[fmt.Sprintf("macaddress%d", i)]
+		if nic.MacAddr == "" {
+			return nil, fmt.Errorf("Could not find corresponding 'macaddress%d'", i)
+		}
+		if nic.Network == NICNetHostonly {
+			nic.HostInterface = props[fmt.Sprintf("hostonlyadapter%d", i)]
+		} else if nic.Network == NICNetBridged {
+			nic.HostInterface = props[fmt.Sprintf("bridgeadapter%d", i)]
+		}
+		vm.NICs = append(vm.NICs, nic)
+	}
+
+	if perr != nil {
+		return nil, fmt.Errorf("parsing machine props failed: %w", perr)
+	}
+
+	return vm, nil
+}
 
 // MachineState stores the last retrieved VM state.
 type MachineState string
@@ -212,96 +328,9 @@ func (m *Machine) Delete() error {
 	return Manage().run("unregistervm", m.Name, "--delete")
 }
 
-var mutex sync.Mutex
-
 // GetMachine finds a machine by its name or UUID.
 func GetMachine(id string) (*Machine, error) {
-	/* There is a strage behavior where running multiple instances of
-	'VBoxManage showvminfo' on same VM simultaneously can return an error of
-	'object is not ready (E_ACCESSDENIED)', so we sequential the operation with a mutex.
-	Note if you are running multiple process of go-virtualbox or 'showvminfo'
-	in the command line side by side, this not gonna work. */
-	mutex.Lock()
-	stdout, stderr, err := Manage().runOutErr("showvminfo", id, "--machinereadable")
-	mutex.Unlock()
-	if err != nil {
-		if reMachineNotFound.FindString(stderr) != "" {
-			return nil, ErrMachineNotExist
-		}
-		return nil, err
-	}
-
-	/* Read all VM info into a map */
-	propMap := make(map[string]string)
-	s := bufio.NewScanner(strings.NewReader(stdout))
-	for s.Scan() {
-		res := reVMInfoLine.FindStringSubmatch(s.Text())
-		if res == nil {
-			continue
-		}
-		key := res[1]
-		if key == "" {
-			key = res[2]
-		}
-		val := res[3]
-		if val == "" {
-			val = res[4]
-		}
-		propMap[key] = val
-	}
-
-	/* Extract basic info */
-	m := New()
-	m.Name = propMap["name"]
-	m.Firmware = propMap["firmware"]
-	m.UUID = propMap["UUID"]
-	m.State = MachineState(propMap["VMState"])
-	n, err := strconv.ParseUint(propMap["memory"], 10, 32)
-	if err != nil {
-		return nil, err
-	}
-	m.Memory = uint(n)
-	n, err = strconv.ParseUint(propMap["cpus"], 10, 32)
-	if err != nil {
-		return nil, err
-	}
-	m.CPUs = uint(n)
-	n, err = strconv.ParseUint(propMap["vram"], 10, 32)
-	if err != nil {
-		return nil, err
-	}
-	m.VRAM = uint(n)
-	m.CfgFile = propMap["CfgFile"]
-	m.BaseFolder = filepath.Dir(m.CfgFile)
-
-	/* Extract NIC info */
-	for i := 1; i <= 4; i++ {
-		var nic NIC
-		nicType, ok := propMap[fmt.Sprintf("nic%d", i)]
-		if !ok || nicType == "none" {
-			break
-		}
-		nic.Network = NICNetwork(nicType)
-		nic.Hardware = NICHardware(propMap[fmt.Sprintf("nictype%d", i)])
-		if nic.Hardware == "" {
-			return nil, fmt.Errorf("Could not find corresponding 'nictype%d'", i)
-		}
-		nic.MacAddr = propMap[fmt.Sprintf("macaddress%d", i)]
-		if nic.MacAddr == "" {
-			return nil, fmt.Errorf("Could not find corresponding 'macaddress%d'", i)
-		}
-		if nic.Network == NICNetHostonly {
-			nic.HostInterface = propMap[fmt.Sprintf("hostonlyadapter%d", i)]
-		} else if nic.Network == NICNetBridged {
-			nic.HostInterface = propMap[fmt.Sprintf("bridgeadapter%d", i)]
-		}
-		m.NICs = append(m.NICs, nic)
-	}
-
-	if err := s.Err(); err != nil {
-		return nil, err
-	}
-	return m, nil
+	return defaultManager.Machine(context.Background(), id)
 }
 
 // ListMachines lists all registered machines.
