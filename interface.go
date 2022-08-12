@@ -17,9 +17,14 @@ type MachineManager interface {
 	// ListMachines returns a list of all machines
 	ListMachines(context.Context) ([]*Machine, error)
 
-	// UpdateMachine allows to update the machine. The returned is the machine
-	// in the current state after the update.
-	UpdateMachine(context.Context, *Machine) (*Machine, error)
+	// ModifyMachine allows to update the machine.
+	ModifyMachine(context.Context, *Machine) error
+
+	// CreateMachine based on the provided information
+	CreateMachine(context.Context, *Machine) error
+
+	// Start the machine with the given name
+	StartMachine(context.Context, string) error
 
 	// DeleteMachine deletes a machine by its name or UUID
 	DeleteMachine(context.Context, string) error
