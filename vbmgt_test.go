@@ -1,7 +1,6 @@
 package virtualbox
 
 import (
-	"io/ioutil"
 	"os"
 	"path"
 	"testing"
@@ -17,7 +16,7 @@ var (
 )
 
 func ReadTestData(file string) string {
-	out, err := ioutil.ReadFile(path.Join("testdata", file))
+	out, err := os.ReadFile(path.Join("testdata", file))
 	if err != nil {
 		panic("No such file :testdata/" + file)
 	}
