@@ -53,14 +53,6 @@ jobs:
     steps:
     - uses: actions/setup-go@v3
     - uses: actions/checkout@v3
-    - uses: actions/cache@v3
-      with:
-        path: |
-          ~/.cache/go-build
-          ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
     - uses: golangci/golangci-lint-action@v3
 
   build:
