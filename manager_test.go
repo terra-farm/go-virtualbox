@@ -3,10 +3,18 @@ package virtualbox
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
 )
+
+func newTestManager() *Manager {
+	m := NewManager(Logger(log.Default()))
+	m.run = testDataRun
+
+	return m
+}
 
 // testDataRun returns the test data for the given args
 func testDataRun(_ context.Context, args ...string) (string, string, error) {

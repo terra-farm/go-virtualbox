@@ -38,7 +38,7 @@ func TestMachine(t *testing.T) {
 	}
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			m := &Manager{run: testDataRun}
+			m := newTestManager()
 
 			got, err := m.Machine(context.Background(), tc.in)
 			if diff := deep.Equal(got, tc.want); !errors.Is(err, tc.err) || diff != nil {

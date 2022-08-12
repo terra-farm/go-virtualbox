@@ -14,6 +14,7 @@ import (
 // Machine returns the information about existing virtualbox machine identified
 // by either its UUID or name.
 func (m *Manager) Machine(ctx context.Context, id string) (*Machine, error) {
+	m.log.Printf("getting information for %q", id)
 	// There is a strage behavior where running multiple instances of
 	// 'VBoxManage showvminfo' on same VM simultaneously can return an error of
 	// 'object is not ready (E_ACCESSDENIED)', so we sequential the operation with a mutex.

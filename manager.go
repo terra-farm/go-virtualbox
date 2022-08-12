@@ -2,6 +2,9 @@ package virtualbox
 
 import (
 	"context"
+	"io"
+	"log"
+	"os"
 	"sync"
 )
 
@@ -16,13 +19,28 @@ type Manager struct {
 	lock sync.Mutex
 
 	run runFn
+
+	log *log.Logger
 }
 
 // NewManager returns a manager capable of managing everything in virtualbox.
-func NewManager() *Manager {
-	return &Manager{
+func NewManager(opts ...Option) *Manager {
+	m := &Manager{
 		run: vboxManageRun,
+		log: log.New(io.Discard, "", 0),
 	}
+
+	// if the debug env var for the virtualbox is set to true, we want to set the
+	// logger to be bit more useful, and the default logger will suffice.
+	if os.Getenv("DEBUG") == "virtualbox" {
+		m.log = log.Default()
+	}
+
+	for _, opt := range opts {
+		opt(m)
+	}
+
+	return m
 }
 
 // vboxManageRun is a function which actually runs the VboxManage
@@ -34,3 +52,13 @@ func vboxManageRun(_ context.Context, args ...string) (string, string, error) {
 // defaultManager is used for backwards compatibility so that the older
 // functions can use it.
 var defaultManager = NewManager()
+
+// Option modifies the manager options
+type Option func(*Manager)
+
+// Logger allows to override the logger used by the manager.
+func Logger(l *log.Logger) Option {
+	return func(m *Manager) {
+		m.log = l
+	}
+}
