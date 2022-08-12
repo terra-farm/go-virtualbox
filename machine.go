@@ -129,6 +129,37 @@ func (m *Manager) Machine(ctx context.Context, id string) (*Machine, error) {
 	return vm, nil
 }
 
+// ListMachines returns the list of the machines
+func (m *Manager) ListMachines(ctx context.Context) ([]*Machine, error) {
+	m.log.Println("listing vms")
+	stdout, _, err := m.run(ctx, "list", "vms")
+	if err != nil {
+		return nil, fmt.Errorf("unable to list vms: %w", err)
+	}
+	vms := []*Machine{}
+	s := bufio.NewScanner(strings.NewReader(stdout))
+	for s.Scan() {
+		res := reVMNameUUID.FindStringSubmatch(s.Text())
+		if res == nil {
+			continue
+		}
+		m, err := m.Machine(ctx, res[1])
+		if err != nil {
+			// Sometimes a VM is listed but not available, so we need to handle this.
+			if errors.Is(err, ErrMachineNotExist) {
+				continue
+			} else {
+				return nil, fmt.Errorf("unable to get machine info: %w", err)
+			}
+		}
+		vms = append(vms, m)
+	}
+	if err := s.Err(); err != nil {
+		return nil, fmt.Errorf("error reading machine list: %w", err)
+	}
+	return vms, nil
+}
+
 // MachineState stores the last retrieved VM state.
 type MachineState string
 
@@ -330,38 +361,15 @@ func (m *Machine) Delete() error {
 }
 
 // GetMachine finds a machine by its name or UUID.
+// DEPRECATED: Use (*Manager).Machine
 func GetMachine(id string) (*Machine, error) {
 	return defaultManager.Machine(context.Background(), id)
 }
 
 // ListMachines lists all registered machines.
+// DEPRECATED: Use (*Manager).ListMachines
 func ListMachines() ([]*Machine, error) {
-	out, err := Manage().runOut("list", "vms")
-	if err != nil {
-		return nil, err
-	}
-	ms := []*Machine{}
-	s := bufio.NewScanner(strings.NewReader(out))
-	for s.Scan() {
-		res := reVMNameUUID.FindStringSubmatch(s.Text())
-		if res == nil {
-			continue
-		}
-		m, err := GetMachine(res[1])
-		if err != nil {
-			// Sometimes a VM is listed but not available, so we need to handle this.
-			if err == ErrMachineNotExist {
-				continue
-			} else {
-				return nil, err
-			}
-		}
-		ms = append(ms, m)
-	}
-	if err := s.Err(); err != nil {
-		return nil, err
-	}
-	return ms, nil
+	return defaultManager.ListMachines(context.Background())
 }
 
 // CreateMachine creates a new machine. If basefolder is empty, use default.
