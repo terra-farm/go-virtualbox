@@ -85,3 +85,9 @@ func TestListMachines(t *testing.T) {
 		})
 	}
 }
+
+func TestModifyMachine(t *testing.T) {
+	// TODO: Figure out how we can do this test, it has pretty extensive flag list
+	//       so having a file in the testdata with such a long name doesn't make
+	//       sense.
+}
