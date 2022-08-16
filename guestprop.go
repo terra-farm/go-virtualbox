@@ -96,7 +96,6 @@ func WaitGuestProperty(vm string, prop string) (string, string, error) {
 //
 // Each GuestProperty change must be read from thwe channel before the waiter Go
 // routine resumes waiting for the next matching change.
-//
 func WaitGuestProperties(vm string, propPattern string, done chan bool, wg *sync.WaitGroup) chan GuestProperty {
 
 	props := make(chan GuestProperty)

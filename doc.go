@@ -1,7 +1,7 @@
 /*
 Package virtualbox implements wrappers to interact with VirtualBox.
 
-VirtualBox Machine State Transition
+# VirtualBox Machine State Transition
 
 A VirtualBox machine can be in one of the following states:
 
@@ -26,23 +26,22 @@ the disk image.
 
 To make things simpler, the following transitions are used instead:
 
-	 start: poweroff|saved|paused|aborted --> running
-	 stop: [paused|saved -->] running --> poweroff
-	 save: [paused -->] running --> saved
-	 restart: [paused|saved -->] running --> poweroff --> running
-	 poweroff: [paused|saved -->] running --> poweroff (unsafe)
-	 reset: [paused|saved -->] running --> poweroff --> running (unsafe)
+	start: poweroff|saved|paused|aborted --> running
+	stop: [paused|saved -->] running --> poweroff
+	save: [paused -->] running --> saved
+	restart: [paused|saved -->] running --> poweroff --> running
+	poweroff: [paused|saved -->] running --> poweroff (unsafe)
+	reset: [paused|saved -->] running --> poweroff --> running (unsafe)
 
 The takeaway is we try our best to transit the virtual machine into the state
 you want it to be, and you only need to watch out for the potentially unsafe
 poweroff and reset.
 
-Guest Properties Management
+# Guest Properties Management
 
 This part of the APIworks both on the host and the guest.
 
 The API enables to set & get specific properties, plus
 waiting on properties patterns (both blocking and non-blocking).
-
 */
 package virtualbox

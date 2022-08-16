@@ -49,7 +49,7 @@ See [GoDoc](https://godoc.org/github.com/terra-farm/go-virtualbox) for full deta
 The [vbhostd](./cmd/vbhostd/README.md) commands waits on the `vbhostd/*` guest-properties pattern.
 
 - When the guest writes a value on the `vbhostd/open`, it causes the host to open the given location:
-    - Write `http://www.hp.com` will open the default browser as the given URL 
+    - Write `http://www.hp.com` will open the default browser as the given URL
     - Write `mailto:foo@bar.com?Cc=bar@foo.com` opens the default mailer pre-filling the recipient and carbon-copy recipient fields
 
 ### Documentation
@@ -82,7 +82,7 @@ $ go build -v ./...
 * `test` run `go test ./...`
 * `lint` only run `gometalinter` linter
 
-## Testing 
+## Testing
 
 ### Preparation
 
@@ -95,7 +95,7 @@ $ vagrant box add bento/ubuntu-16.04
 $ vagrant up
 ```
 
-Then run the tests 
+Then run the tests
 
 ```bash
 $ export TEST_VM=go-virtualbox
