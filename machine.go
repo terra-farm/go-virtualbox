@@ -160,6 +160,62 @@ func (m *Manager) ListMachines(ctx context.Context) ([]*Machine, error) {
 	return vms, nil
 }
 
+// ModifyMachine modifies the data of the machine
+func (m *Manager) ModifyMachine(ctx context.Context, vm *Machine) error {
+	args := []string{"modifyvm", vm.Name,
+		"--firmware", vm.Firmware,
+		"--bioslogofadein", "off",
+		"--bioslogofadeout", "off",
+		"--bioslogodisplaytime", "0",
+		"--biosbootmenu", "disabled",
+
+		"--ostype", vm.OSType,
+		"--cpus", fmt.Sprintf("%d", vm.CPUs),
+		"--memory", fmt.Sprintf("%d", vm.Memory),
+		"--vram", fmt.Sprintf("%d", vm.VRAM),
+
+		"--acpi", vm.Flag.Get(ACPI),
+		"--ioapic", vm.Flag.Get(IOAPIC),
+		"--rtcuseutc", vm.Flag.Get(RTCUSEUTC),
+		"--cpuhotplug", vm.Flag.Get(CPUHOTPLUG),
+		"--pae", vm.Flag.Get(PAE),
+		"--longmode", vm.Flag.Get(LONGMODE),
+		"--hpet", vm.Flag.Get(HPET),
+		"--hwvirtex", vm.Flag.Get(HWVIRTEX),
+		"--triplefaultreset", vm.Flag.Get(TRIPLEFAULTRESET),
+		"--nestedpaging", vm.Flag.Get(NESTEDPAGING),
+		"--largepages", vm.Flag.Get(LARGEPAGES),
+		"--vtxvpid", vm.Flag.Get(VTXVPID),
+		"--vtxux", vm.Flag.Get(VTXUX),
+		"--accelerate3d", vm.Flag.Get(ACCELERATE3D),
+	}
+
+	for i, dev := range vm.BootOrder {
+		if i > 3 {
+			break // Only four slots `--boot{1,2,3,4}`. Ignore the rest.
+		}
+		args = append(args, fmt.Sprintf("--boot%d", i+1), dev)
+	}
+
+	for i, nic := range vm.NICs {
+		n := i + 1
+		args = append(args,
+			fmt.Sprintf("--nic%d", n), string(nic.Network),
+			fmt.Sprintf("--nictype%d", n), string(nic.Hardware),
+			fmt.Sprintf("--cableconnected%d", n), "on")
+		if nic.Network == NICNetHostonly {
+			args = append(args, fmt.Sprintf("--hostonlyadapter%d", n), nic.HostInterface)
+		} else if nic.Network == NICNetBridged {
+			args = append(args, fmt.Sprintf("--bridgeadapter%d", n), nic.HostInterface)
+		}
+	}
+
+	if err := Manage().run(args...); err != nil {
+		return err
+	}
+	return vm.Refresh()
+}
+
 // MachineState stores the last retrieved VM state.
 type MachineState string
 
@@ -407,59 +463,9 @@ func CreateMachine(name, basefolder string) (*Machine, error) {
 }
 
 // Modify changes the settings of the machine.
+// DEPRECATED: Use (*Manager).ModifyMachine
 func (m *Machine) Modify() error {
-	args := []string{"modifyvm", m.Name,
-		"--firmware", m.Firmware,
-		"--bioslogofadein", "off",
-		"--bioslogofadeout", "off",
-		"--bioslogodisplaytime", "0",
-		"--biosbootmenu", "disabled",
-
-		"--ostype", m.OSType,
-		"--cpus", fmt.Sprintf("%d", m.CPUs),
-		"--memory", fmt.Sprintf("%d", m.Memory),
-		"--vram", fmt.Sprintf("%d", m.VRAM),
-
-		"--acpi", m.Flag.Get(ACPI),
-		"--ioapic", m.Flag.Get(IOAPIC),
-		"--rtcuseutc", m.Flag.Get(RTCUSEUTC),
-		"--cpuhotplug", m.Flag.Get(CPUHOTPLUG),
-		"--pae", m.Flag.Get(PAE),
-		"--longmode", m.Flag.Get(LONGMODE),
-		"--hpet", m.Flag.Get(HPET),
-		"--hwvirtex", m.Flag.Get(HWVIRTEX),
-		"--triplefaultreset", m.Flag.Get(TRIPLEFAULTRESET),
-		"--nestedpaging", m.Flag.Get(NESTEDPAGING),
-		"--largepages", m.Flag.Get(LARGEPAGES),
-		"--vtxvpid", m.Flag.Get(VTXVPID),
-		"--vtxux", m.Flag.Get(VTXUX),
-		"--accelerate3d", m.Flag.Get(ACCELERATE3D),
-	}
-
-	for i, dev := range m.BootOrder {
-		if i > 3 {
-			break // Only four slots `--boot{1,2,3,4}`. Ignore the rest.
-		}
-		args = append(args, fmt.Sprintf("--boot%d", i+1), dev)
-	}
-
-	for i, nic := range m.NICs {
-		n := i + 1
-		args = append(args,
-			fmt.Sprintf("--nic%d", n), string(nic.Network),
-			fmt.Sprintf("--nictype%d", n), string(nic.Hardware),
-			fmt.Sprintf("--cableconnected%d", n), "on")
-		if nic.Network == NICNetHostonly {
-			args = append(args, fmt.Sprintf("--hostonlyadapter%d", n), nic.HostInterface)
-		} else if nic.Network == NICNetBridged {
-			args = append(args, fmt.Sprintf("--bridgeadapter%d", n), nic.HostInterface)
-		}
-	}
-
-	if err := Manage().run(args...); err != nil {
-		return err
-	}
-	return m.Refresh()
+	return defaultManager.ModifyMachine(context.Background(), m)
 }
 
 // AddNATPF adds a NAT port forarding rule to the n-th NIC with the given name.
