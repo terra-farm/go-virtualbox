@@ -46,7 +46,7 @@ func NewManager(opts ...Option) *Manager {
 // vboxManageRun is a function which actually runs the VboxManage
 func vboxManageRun(_ context.Context, args ...string) (string, string, error) {
 	// TODO: reimplement and do not use the old function
-	return Manage().runOutErr(args...)
+	return Manage().run(args...)
 }
 
 // defaultManager is used for backwards compatibility so that the older

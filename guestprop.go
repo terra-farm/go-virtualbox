@@ -22,9 +22,11 @@ var (
 // SetGuestProperty writes a VirtualBox guestproperty to the given value.
 func SetGuestProperty(vm string, prop string, val string) error {
 	if Manage().isGuest() {
-		return Manage().setOpts(sudo(true)).run("guestproperty", "set", prop, val)
+		_, _, err := Manage().setOpts(sudo(true)).run("guestproperty", "set", prop, val)
+		return err
 	}
-	return Manage().run("guestproperty", "set", vm, prop, val)
+	_, _, err := Manage().run("guestproperty", "set", vm, prop, val)
+	return err
 }
 
 // GetGuestProperty reads a VirtualBox guestproperty.
@@ -32,9 +34,9 @@ func GetGuestProperty(vm string, prop string) (string, error) {
 	var out string
 	var err error
 	if Manage().isGuest() {
-		out, err = Manage().setOpts(sudo(true)).runOut("guestproperty", "get", prop)
+		out, _, err = Manage().setOpts(sudo(true)).run("guestproperty", "get", prop)
 	} else {
-		out, err = Manage().runOut("guestproperty", "get", vm, prop)
+		out, _, err = Manage().run("guestproperty", "get", vm, prop)
 	}
 	if err != nil {
 		return "", err
@@ -61,12 +63,12 @@ func WaitGuestProperty(vm string, prop string) (string, string, error) {
 	var err error
 	Debug("WaitGuestProperty(): wait on '%s'", prop)
 	if Manage().isGuest() {
-		_, err = Manage().setOpts(sudo(true)).runOut("guestproperty", "wait", prop)
+		_, _, err = Manage().setOpts(sudo(true)).run("guestproperty", "wait", prop)
 		if err != nil {
 			return "", "", err
 		}
 	}
-	out, err = Manage().runOut("guestproperty", "wait", vm, prop)
+	out, _, err = Manage().run("guestproperty", "wait", vm, prop)
 	if err != nil {
 		log.Print(err)
 		return "", "", err
@@ -129,7 +131,9 @@ func WaitGuestProperties(vm string, propPattern string, done chan bool, wg *sync
 // DeleteGuestProperty deletes a VirtualBox guestproperty.
 func DeleteGuestProperty(vm string, prop string) error {
 	if Manage().isGuest() {
-		return Manage().setOpts(sudo(true)).run("guestproperty", "delete", prop)
+		_, _, err := Manage().setOpts(sudo(true)).run("guestproperty", "delete", prop)
+		return err
 	}
-	return Manage().run("guestproperty", "delete", vm, prop)
+	_, _, err := Manage().run("guestproperty", "delete", vm, prop)
+	return err
 }

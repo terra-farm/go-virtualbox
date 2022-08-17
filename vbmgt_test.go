@@ -47,9 +47,9 @@ func TestVBMOut(t *testing.T) {
 	if ManageMock != nil {
 		var out = "\"Ubuntu\" {2e16b1fc-aaaa-4a7a-a9a1-e89a8bde7874}\n" +
 			"\"go-virtualbox\" {def44546-aaaa-4902-8d15-b91c99c80cbc}"
-		ManageMock.EXPECT().runOut("list", "vms").Return(out, nil)
+		ManageMock.EXPECT().run("list", "vms").Return(out, "", nil)
 	}
-	b, err := Manage().runOut("list", "vms")
+	b, _, err := Manage().run("list", "vms")
 	if err != nil {
 		t.Fatal(err)
 	}

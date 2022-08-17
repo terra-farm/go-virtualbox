@@ -16,7 +16,7 @@ func TestGuestProperty(t *testing.T) {
 	t.Logf("ManageMock=%v (type=%T)", ManageMock, ManageMock)
 	if ManageMock != nil {
 		ManageMock.EXPECT().isGuest().Return(false)
-		ManageMock.EXPECT().run("guestproperty", "set", VM, "test_key", "test_val").Return(nil)
+		ManageMock.EXPECT().run("guestproperty", "set", VM, "test_key", "test_val").Return("", "", nil)
 	}
 	err := SetGuestProperty(VM, "test_key", "test_val")
 	if err != nil {
@@ -26,7 +26,7 @@ func TestGuestProperty(t *testing.T) {
 
 	if ManageMock != nil {
 		ManageMock.EXPECT().isGuest().Return(false)
-		ManageMock.EXPECT().runOut("guestproperty", "get", VM, "test_key").Return("Value: test_val", nil).Times(1)
+		ManageMock.EXPECT().run("guestproperty", "get", VM, "test_key").Return("Value: test_val", "", nil).Times(1)
 	}
 	val, err := GetGuestProperty(VM, "test_key")
 	if err != nil {
@@ -41,7 +41,7 @@ func TestGuestProperty(t *testing.T) {
 	// Now deletes it...
 	if ManageMock != nil {
 		ManageMock.EXPECT().isGuest().Return(false)
-		ManageMock.EXPECT().run("guestproperty", "delete", VM, "test_key").Return(nil).Times(1)
+		ManageMock.EXPECT().run("guestproperty", "delete", VM, "test_key").Return("", "", nil).Times(1)
 	}
 	err = DeleteGuestProperty(VM, "test_key")
 	if err != nil {
@@ -52,7 +52,7 @@ func TestGuestProperty(t *testing.T) {
 	// ...and check that it is  no longer readable
 	if ManageMock != nil {
 		ManageMock.EXPECT().isGuest().Return(false)
-		ManageMock.EXPECT().runOut("guestproperty", "get", VM, "test_key").Return("", errors.New("foo")).Times(1)
+		ManageMock.EXPECT().run("guestproperty", "get", VM, "test_key").Return("", "", errors.New("foo")).Times(1)
 	}
 	_, err = GetGuestProperty(VM, "test_key")
 	if err == nil {
@@ -71,7 +71,7 @@ func TestWaitGuestProperty(t *testing.T) {
 		waitGuestProperty1Out := ReadTestData("vboxmanage-guestproperty-wait-1.out")
 		gomock.InOrder(
 			ManageMock.EXPECT().isGuest().Return(false),
-			ManageMock.EXPECT().runOut("guestproperty", "wait", VM, "test_*").Return(waitGuestProperty1Out, nil).Times(1),
+			ManageMock.EXPECT().run("guestproperty", "wait", VM, "test_*").Return(waitGuestProperty1Out, "", nil).Times(1),
 		)
 	} else {
 		go func() {
@@ -105,11 +105,11 @@ func TestWaitGuestProperties(t *testing.T) {
 		waitGuestProperty2Out := ReadTestData("vboxmanage-guestproperty-wait-2.out")
 		gomock.InOrder(
 			ManageMock.EXPECT().isGuest().Return(false),
-			ManageMock.EXPECT().runOut("guestproperty", "wait", VM, "test_*").Return(waitGuestProperty1Out, nil).Times(1),
+			ManageMock.EXPECT().run("guestproperty", "wait", VM, "test_*").Return(waitGuestProperty1Out, "", nil).Times(1),
 			ManageMock.EXPECT().isGuest().Return(false),
-			ManageMock.EXPECT().runOut("guestproperty", "wait", VM, "test_*").Return(waitGuestProperty2Out, nil).Times(1),
+			ManageMock.EXPECT().run("guestproperty", "wait", VM, "test_*").Return(waitGuestProperty2Out, "", nil).Times(1),
 			ManageMock.EXPECT().isGuest().Return(false),
-			ManageMock.EXPECT().runOut("guestproperty", "wait", VM, "test_*").Return(waitGuestProperty1Out, nil).Times(1),
+			ManageMock.EXPECT().run("guestproperty", "wait", VM, "test_*").Return(waitGuestProperty1Out, "", nil).Times(1),
 		)
 	} else {
 		go func() {
@@ -164,7 +164,7 @@ func TestWaitGuestPropertiesQuit(t *testing.T) {
 		waitGuestProperty1Out := ReadTestData("vboxmanage-guestproperty-wait-1.out")
 		gomock.InOrder(
 			ManageMock.EXPECT().isGuest().Return(false),
-			ManageMock.EXPECT().runOut("guestproperty", "wait", VM, "test_*").Return(waitGuestProperty1Out, nil).Times(1),
+			ManageMock.EXPECT().run("guestproperty", "wait", VM, "test_*").Return(waitGuestProperty1Out, "", nil).Times(1),
 		)
 	} else {
 		go func() {

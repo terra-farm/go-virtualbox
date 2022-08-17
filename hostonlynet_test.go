@@ -12,7 +12,7 @@ func TestHostonlyNets(t *testing.T) {
 	if ManageMock != nil {
 		listHostOnlyIfsOut := ReadTestData("vboxmanage-list-hostonlyifs-1.out")
 		gomock.InOrder(
-			ManageMock.EXPECT().runOut("list", "hostonlyifs").Return(listHostOnlyIfsOut, nil).Times(1),
+			ManageMock.EXPECT().run("list", "hostonlyifs").Return(listHostOnlyIfsOut, "", nil).Times(1),
 		)
 	}
 	m, err := HostonlyNets()

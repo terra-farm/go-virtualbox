@@ -28,7 +28,8 @@ func addDHCP(kind, name string, d DHCP) error {
 	} else {
 		args = append(args, "--disable")
 	}
-	return Manage().run(args...)
+	_, _, err := Manage().run(args...)
+	return err
 }
 
 // AddInternalDHCP adds a DHCP server to an internal network.
@@ -43,7 +44,7 @@ func AddHostonlyDHCP(ifname string, d DHCP) error {
 
 // DHCPs gets all DHCP server settings in a map keyed by DHCP.NetworkName.
 func DHCPs() (map[string]*DHCP, error) {
-	out, err := Manage().runOut("list", "dhcpservers")
+	out, _, err := Manage().run("list", "dhcpservers")
 	if err != nil {
 		return nil, err
 	}
