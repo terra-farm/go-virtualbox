@@ -1,9 +1,11 @@
+// DEPRECATED: Use Virtualbox and other interfaces
+//go:generate go run github.com/golang/mock/mockgen@latest -source=vbcmd.go -destination=vbcmd.mock.go -package=virtualbox -mock_names=Command=MockCommand
+
 package virtualbox
 
 import (
 	"bytes"
 	"errors"
-	"os"
 	"os/exec"
 	"runtime"
 )
@@ -16,9 +18,7 @@ type Command interface {
 	setOpts(opts ...option) Command
 	isGuest() bool
 	path() string
-	run(args ...string) error
-	runOut(args ...string) (string, error)
-	runOutErr(args ...string) (string, string, error)
+	run(args ...string) (string, string, error)
 }
 
 var (
@@ -76,39 +76,7 @@ func (vbcmd command) prepare(args []string) *exec.Cmd {
 	return exec.Command(program, argv...) // #nosec
 }
 
-func (vbcmd command) run(args ...string) error {
-	defer vbcmd.setOpts(sudo(false))
-	cmd := vbcmd.prepare(args)
-	if Verbose {
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-	}
-	if err := cmd.Run(); err != nil {
-		if ee, ok := err.(*exec.Error); ok && ee == exec.ErrNotFound {
-			return ErrCommandNotFound
-		}
-		return err
-	}
-	return nil
-}
-
-func (vbcmd command) runOut(args ...string) (string, error) {
-	defer vbcmd.setOpts(sudo(false))
-	cmd := vbcmd.prepare(args)
-	if Verbose {
-		cmd.Stderr = os.Stderr
-	}
-
-	b, err := cmd.Output()
-	if err != nil {
-		if ee, ok := err.(*exec.Error); ok && ee == exec.ErrNotFound {
-			err = ErrCommandNotFound
-		}
-	}
-	return string(b), err
-}
-
-func (vbcmd command) runOutErr(args ...string) (string, string, error) {
+func (vbcmd command) run(args ...string) (string, string, error) {
 	defer vbcmd.setOpts(sudo(false))
 	cmd := vbcmd.prepare(args)
 	var stdout bytes.Buffer

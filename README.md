@@ -121,7 +121,7 @@ run `go test --run TestGuestProperty`.
 ### Re-generate mock
 
 ```bash
-mockgen -source=vbcmd.go -destination=mockvbcmd_test.go -package=virtualbox -mock_names=Command=MockCommand
+go generate ./...
 ```
 
 ## Using local changes with your own project

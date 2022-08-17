@@ -21,5 +21,5 @@ func ParseIPv4Mask(s string) net.IPMask {
 // occured during command execution.
 func Run(_ context.Context, args ...string) (string, string, error) {
 	// TODO: Convert the function so you can pass in the context.
-	return Manage().runOutErr(args...)
+	return Manage().run(args...)
 }

@@ -36,7 +36,7 @@ type HostonlyNet struct {
 
 // CreateHostonlyNet creates a new host-only network.
 func CreateHostonlyNet() (*HostonlyNet, error) {
-	out, err := Manage().runOut("hostonlyif", "create")
+	out, _, err := Manage().run("hostonlyif", "create")
 	if err != nil {
 		return nil, err
 	}
@@ -66,27 +66,27 @@ func (n *HostonlyNet) Config() error {
 			}
 		}
 		if n.DHCP {
-			if err := Manage().run("hostonlyif", "ipconfig", fmt.Sprintf("\"%s\"", n.Name), "--dhcp"); err != nil { // not implemented as of VirtualBox 4.3
+			if _, _, err := Manage().run("hostonlyif", "ipconfig", fmt.Sprintf("\"%s\"", n.Name), "--dhcp"); err != nil { // not implemented as of VirtualBox 4.3
 				return err
 			}
 		}
 
 	} else {
 		if n.IPv4.IP != nil && n.IPv4.Mask != nil {
-			if err := Manage().run("hostonlyif", "ipconfig", n.Name, "--ip", n.IPv4.IP.String(), "--netmask", net.IP(n.IPv4.Mask).String()); err != nil {
+			if _, _, err := Manage().run("hostonlyif", "ipconfig", n.Name, "--ip", n.IPv4.IP.String(), "--netmask", net.IP(n.IPv4.Mask).String()); err != nil {
 				return err
 			}
 		}
 
 		if n.IPv6.IP != nil && n.IPv6.Mask != nil {
 			prefixLen, _ := n.IPv6.Mask.Size()
-			if err := Manage().run("hostonlyif", "ipconfig", n.Name, "--ipv6", n.IPv6.IP.String(), "--netmasklengthv6", fmt.Sprintf("%d", prefixLen)); err != nil {
+			if _, _, err := Manage().run("hostonlyif", "ipconfig", n.Name, "--ipv6", n.IPv6.IP.String(), "--netmasklengthv6", fmt.Sprintf("%d", prefixLen)); err != nil {
 				return err
 			}
 		}
 
 		if n.DHCP {
-			if err := Manage().run("hostonlyif", "ipconfig", n.Name, "--dhcp"); err != nil { // not implemented as of VirtualBox 4.3
+			if _, _, err := Manage().run("hostonlyif", "ipconfig", n.Name, "--dhcp"); err != nil { // not implemented as of VirtualBox 4.3
 				return err
 			}
 		}
@@ -98,7 +98,7 @@ func (n *HostonlyNet) Config() error {
 
 // HostonlyNets gets all host-only networks in a  map keyed by HostonlyNet.NetworkName.
 func HostonlyNets() (map[string]*HostonlyNet, error) {
-	out, err := Manage().runOut("list", "hostonlyifs")
+	out, _, err := Manage().run("list", "hostonlyifs")
 	if err != nil {
 		return nil, err
 	}

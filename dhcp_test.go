@@ -12,7 +12,7 @@ func TestDHCPs(t *testing.T) {
 	if ManageMock != nil {
 		listDhcpServersOut := ReadTestData("vboxmanage-list-dhcpservers-1.out")
 		gomock.InOrder(
-			ManageMock.EXPECT().runOut("list", "dhcpservers").Return(listDhcpServersOut, nil).Times(1),
+			ManageMock.EXPECT().run("list", "dhcpservers").Return(listDhcpServersOut, "", nil).Times(1),
 		)
 	}
 	m, err := DHCPs()
