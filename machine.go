@@ -216,6 +216,30 @@ func (m *Manager) ModifyMachine(ctx context.Context, vm *Machine) error {
 	return vm.Refresh()
 }
 
+// StartMachine will start the machine based on its current state.
+func (m *Manager) StartMachine(ctx context.Context, id string) error {
+	var args []string
+
+	vm, err := m.Machine(ctx, id)
+	if err != nil {
+		return fmt.Errorf("unable to get machine to check its status: %w", err)
+	}
+
+	switch vm.State {
+	case Paused:
+		args = []string{"controlvm", id, "resume"}
+	case Poweroff, Saved, Aborted:
+		args = []string{"startvm", id, "--type", "headless"}
+	}
+
+	_, msg, err := m.run(ctx, args...)
+	if err != nil {
+		return errors.New(msg)
+	}
+
+	return nil
+}
+
 // MachineState stores the last retrieved VM state.
 type MachineState string
 
@@ -307,21 +331,7 @@ func (m *Machine) Refresh() error {
 
 // Start the machine, and return the underlying error when unable to do so.
 func (m *Machine) Start() error {
-	var args []string
-
-	switch m.State {
-	case Paused:
-		args = []string{"controlvm", m.Name, "resume"}
-	case Poweroff, Saved, Aborted:
-		args = []string{"startvm", m.Name, "--type", "headless"}
-	}
-
-	_, msg, err := Run(context.Background(), args...)
-	if err != nil {
-		return errors.New(msg)
-	}
-
-	return nil
+	return defaultManager.StartMachine(context.Background(), m.UUID)
 }
 
 // DisconnectSerialPort sets given serial port to disconnected.
