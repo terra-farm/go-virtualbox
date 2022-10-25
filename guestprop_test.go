@@ -36,6 +36,18 @@ func TestGuestProperty(t *testing.T) {
 	if val != "test_val" {
 		t.Fatal("Wrong value")
 	}
+	if ManageMock != nil {
+		ManageMock.EXPECT().isGuest().Return(false)
+		ManageMock.EXPECT().run("guestproperty", "get", VM, "test_key").Return("value: test_val", "", nil).Times(1)
+	}
+	val_lowercase, err := GetGuestProperty(VM, "test_key")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("val='%s'", val_lowercase)
+	if val_lowercase != "test_val" {
+		t.Fatal("Wrong value")
+	}
 	Debug("OK GetGuestProperty test_key=test_val")
 
 	// Now deletes it...
