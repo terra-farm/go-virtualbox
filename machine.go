@@ -208,6 +208,9 @@ func (m *Manager) ModifyMachine(ctx context.Context, vm *Machine) error {
 		} else if nic.Network == NICNetBridged {
 			args = append(args, fmt.Sprintf("--bridgeadapter%d", n), nic.HostInterface)
 		}
+		if nic.MacAddr != "" {
+			args = append(args, fmt.Sprintf("--macaddress%d", n), nic.MacAddr)
+		}
 	}
 
 	if _, _, err := m.run(ctx, args...); err != nil {
