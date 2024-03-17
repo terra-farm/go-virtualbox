@@ -117,7 +117,7 @@ func (m *Manager) Machine(ctx context.Context, id string) (*Machine, error) {
 		if nic.Network == NICNetHostonly {
 			nic.HostInterface = props[fmt.Sprintf("hostonlyadapter%d", i)]
 		} else if nic.Network == NICNetBridged {
-			nic.HostInterface = props[fmt.Sprintf("bridgeadapter%d", i)]
+			nic.HostInterface = props[fmt.Sprintf("bridge-adapter%d", i)]
 		}
 		vm.NICs = append(vm.NICs, nic)
 	}
